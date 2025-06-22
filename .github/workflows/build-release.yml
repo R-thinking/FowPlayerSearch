@@ -1,0 +1,190 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Install Node.js dependencies
+      run: npm ci
+      
+    - name: Build React app
+      run: npm run build
+      
+    - name: Build Electron app (Windows)
+      if: matrix.os == 'windows-latest'
+      run: npm run make:win
+      
+    - name: Build Electron app (macOS)
+      if: matrix.os == 'macos-latest'
+      run: npm run make
+      
+    - name: Build Electron app (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: npm run make
+      
+    # Upload Windows artifacts
+    - name: Upload Windows artifacts
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: FowCrawler-Windows
+        path: |
+          out/make/squirrel.windows/x64/*.exe
+          out/make/squirrel.windows/x64/*.nupkg
+          out/make/zip/win32/x64/*.zip
+        retention-days: 30
+        
+    # Upload macOS artifacts  
+    - name: Upload macOS artifacts
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: FowCrawler-macOS
+        path: |
+          out/make/zip/darwin/x64/*.zip
+          out/make/*.dmg
+        retention-days: 30
+        
+    # Upload Linux artifacts
+    - name: Upload Linux artifacts
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: FowCrawler-Linux
+        path: |
+          out/make/deb/x64/*.deb
+          out/make/rpm/x64/*.rpm
+          out/make/zip/linux/x64/*.zip
+        retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        
+    - name: Display structure of downloaded files
+      run: ls -la artifacts/
+      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.version || github.ref_name }}
+        release_name: FowCrawler ${{ github.event.inputs.version || github.ref_name }}
+        body: |
+          ## FowCrawler Release ${{ github.event.inputs.version || github.ref_name }}
+          
+          ### Downloads
+          - **Windows**: Download `FowCrawler-Setup.exe` for easy installation
+          - **macOS**: Download the `.zip` file and extract
+          - **Linux**: Download `.deb` (Ubuntu/Debian) or `.rpm` (RedHat/CentOS)
+          
+          ### Features
+          - League of Legends player ranking search
+          - Filter by winrate and rank range
+          - Export results to CSV
+          - Real-time progress tracking
+          - Automatic Python API integration
+          
+          ### System Requirements
+          - **Windows**: Windows 10 or later
+          - **macOS**: macOS 10.15 or later
+          - **Linux**: Ubuntu 18.04+ or equivalent
+          - **Python**: 3.8+ (included in Windows build)
+          
+          ### Installation
+          - **Windows**: Run the installer and follow the setup wizard
+          - **macOS/Linux**: Extract and run the executable
+          
+          For detailed instructions, see [BUILD_WINDOWS.md](https://github.com/${{ github.repository }}/blob/main/BUILD_WINDOWS.md)
+        draft: false
+        prerelease: false
+        
+    # Upload Windows files
+    - name: Upload Windows Installer
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/FowCrawler-Windows/FowCrawler-Setup.exe
+        asset_name: FowCrawler-Setup.exe
+        asset_content_type: application/octet-stream
+        
+    - name: Upload Windows ZIP
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/FowCrawler-Windows/FowCrawler-win32-x64.zip
+        asset_name: FowCrawler-Windows.zip
+        asset_content_type: application/zip
+        
+    # Upload macOS files
+    - name: Upload macOS ZIP
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/FowCrawler-macOS/FowCrawler-darwin-x64.zip
+        asset_name: FowCrawler-macOS.zip
+        asset_content_type: application/zip
+        
+    # Upload Linux files
+    - name: Upload Linux DEB
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/FowCrawler-Linux/fowcrawler_1.0.0_amd64.deb
+        asset_name: FowCrawler-Linux.deb
+        asset_content_type: application/octet-stream 
