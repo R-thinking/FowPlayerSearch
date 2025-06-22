@@ -30,7 +30,6 @@ module.exports = {
         exe: 'FowCrawler.exe',
         setupExe: 'FowCrawler-Setup.exe',
         setupIcon: './assets/icon.ico',
-        loadingGif: './assets/loading.gif', // Optional loading animation
         noMsi: true, // Set to false if you want MSI installer too
       },
     },
