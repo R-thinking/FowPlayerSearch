@@ -540,7 +540,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
           
           // Fetch individual page without filtering for speed
           const response = await fetch(
-            `http://localhost:5000/api/search/winrate?region=${region}&winrate=0&start_page=${page}&end_page=${page}`,
+            `http://localhost:5002/api/search/winrate?region=${region}&winrate=0&start_page=${page}&end_page=${page}`,
             {
               method: 'GET',
               headers: {
@@ -615,7 +615,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         setCurrentPage(0);
         
         const response = await fetch(
-          `http://localhost:5000/api/search/winrate?region=${region}&winrate=0&start_page=${actualStartPage}&end_page=${actualEndPage}`,
+          `http://localhost:5002/api/search/winrate?region=${region}&winrate=0&start_page=${actualStartPage}&end_page=${actualEndPage}`,
           {
             method: 'GET',
             headers: {

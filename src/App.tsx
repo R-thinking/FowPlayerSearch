@@ -126,7 +126,7 @@ const App: React.FC = () => {
     const checkServerStatus = async () => {
       try {
         setServerStatus('checking');
-        const response = await fetch('http://localhost:5000/api/health', {
+        const response = await fetch('http://localhost:5002/api/health', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

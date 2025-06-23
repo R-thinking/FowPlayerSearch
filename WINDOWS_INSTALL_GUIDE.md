@@ -33,6 +33,70 @@ FowCrawler now includes all Python dependencies automatically! You only need Pyt
 
 ## 🔧 Troubleshooting
 
+### ERR_CONNECTION_REFUSED Error
+
+If you see `GET http://localhost:5002/api/health/ net::ERR_CONNECTION_REFUSED`, this means the Python API server isn't starting properly.
+
+#### Step 1: Check Python Installation
+
+1. **Open Command Prompt** (Run as Administrator)
+2. **Test Python**:
+   ```cmd
+   python --version
+   ```
+   If this fails, try:
+   ```cmd
+   python3 --version
+   py --version
+   ```
+
+3. **If Python is not found**:
+   - Download Python from [python.org](https://www.python.org/downloads/windows/)
+   - **IMPORTANT**: Check "Add Python to PATH" during installation
+   - Restart your computer after installation
+
+#### Step 2: Check App Console Logs
+
+1. **Run FowCrawler from Command Prompt** to see debug output:
+   ```cmd
+   cd "C:\Program Files\FowCrawler"  # or wherever installed
+   FowCrawler.exe
+   ```
+
+2. **Look for these messages**:
+   - `✅ Python API server started successfully on port 5002!` = Working
+   - `❌ All Python executables failed` = Python not found/working
+   - `🐍 Python check results:` = Shows what was tried
+
+#### Step 3: Manual Python Test
+
+Test if Python can run the API manually:
+
+1. **Navigate to app directory**:
+   ```cmd
+   cd "C:\Program Files\FowCrawler\resources\python_api"
+   ```
+
+2. **Try running the API**:
+   ```cmd
+   python run.py
+   ```
+
+3. **If it works**, you should see:
+   ```
+   🚀 Starting FOW Crawler API with WebSocket support...
+   📡 API will be available at: http://localhost:5002
+   ```
+
+#### Step 4: Windows Defender Issues
+
+Windows Defender may block the Python process:
+
+1. **Open Windows Security**
+2. **Go to Virus & threat protection**
+3. **Add exclusion** for FowCrawler installation folder
+4. **Temporarily disable real-time protection** to test
+
 ### App Opens But Shows Nothing/Blank Screen
 
 This usually means the Python API backend isn't starting properly.
@@ -109,10 +173,12 @@ python --version
 
 #### Check for Port Conflicts
 
-The app uses port 5000 by default. If another app is using it:
+The app uses port 5002 by default. If another app is using it:
 
-1. **Close other applications** that might use port 5000
+1. **Close other applications** that might use port 5002
 2. **Restart FowCrawler**
+
+**Note**: We use port 5002 instead of 5000 because port 5000 is commonly used by macOS Control Center (AirPlay Receiver) and can cause conflicts.
 
 ### Performance Issues
 

@@ -46,7 +46,7 @@ const startPythonAPI = () => {
     }
     
     if (!fs.existsSync(pythonScript)) {
-      console.error('Python script not found! App may not work properly.');
+      console.error('❌ Python script not found! App may not work properly.');
       console.log('Contents of resources directory:', fs.readdirSync(resourcesPath));
       return;
     }
@@ -57,15 +57,27 @@ const startPythonAPI = () => {
       : ['python3', 'python', '/usr/bin/python3', '/usr/local/bin/python3'];
     
     let currentExecutableIndex = 0;
+    let pythonCheckResults = [];
     
     const tryStartPython = () => {
       if (currentExecutableIndex >= pythonExecutables.length) {
-        console.error('All Python executables failed. Python API will not start.');
+        console.error('❌ All Python executables failed. Python API will not start.');
+        console.error('🐍 Python check results:', pythonCheckResults);
+        
+        if (process.platform === 'win32') {
+          console.error('\n🔧 WINDOWS TROUBLESHOOTING STEPS:');
+          console.error('1. Install Python from https://www.python.org/downloads/windows/');
+          console.error('2. During installation, check "Add Python to PATH"');
+          console.error('3. Restart your computer after installation');
+          console.error('4. Open Command Prompt and verify: python --version');
+          console.error('5. If still not working, try running as Administrator');
+          console.error('6. Check Windows Defender - it may be blocking Python');
+        }
         return;
       }
       
       const pythonExe = pythonExecutables[currentExecutableIndex];
-      console.log(`Trying Python executable: ${pythonExe}`);
+      console.log(`🐍 Trying Python executable: ${pythonExe}`);
       
       // Start Python process
       pythonProcess = spawn(pythonExe, [pythonScript], {
@@ -81,37 +93,62 @@ const startPythonAPI = () => {
 
       pythonProcess.stdout.on('data', (data) => {
         const output = data.toString().trim();
-        console.log(`Python API stdout: ${output}`);
+        console.log(`🐍 Python API stdout: ${output}`);
         
         // Check if server started successfully
-        if (output.includes('Running on') || output.includes('Flask') || output.includes('5000')) {
-          console.log('✅ Python API server started successfully!');
+        if (output.includes('Running on') || output.includes('Flask') || output.includes('5002')) {
+          console.log('✅ Python API server started successfully on port 5002!');
         }
       });
 
       pythonProcess.stderr.on('data', (data) => {
         const error = data.toString().trim();
-        console.error(`Python API stderr: ${error}`);
+        console.error(`🐍 Python API stderr: ${error}`);
         
-        // Check for common errors
+        // Check for common errors and provide specific help
         if (error.includes('ModuleNotFoundError') || error.includes('ImportError')) {
-          console.error('❌ Python dependencies missing. Please install required packages.');
+          console.error('❌ Python dependencies missing.');
+          if (process.platform === 'win32') {
+            console.error('💡 Try running: pip install flask flask-cors selenium beautifulsoup4 pandas requests');
+          }
+        }
+        
+        if (error.includes('Permission denied') || error.includes('Access is denied')) {
+          console.error('❌ Permission denied - try running as Administrator');
+        }
+        
+        if (error.includes('No module named')) {
+          console.error('❌ Missing Python module - dependencies not properly installed');
         }
       });
 
       pythonProcess.on('close', (code) => {
-        console.log(`Python API process exited with code ${code}`);
+        const result = `${pythonExe}: exited with code ${code}`;
+        pythonCheckResults.push(result);
+        console.log(`🐍 Python process result: ${result}`);
         pythonProcess = null;
         
         if (code !== 0 && currentExecutableIndex < pythonExecutables.length - 1) {
-          console.log('Python process failed, trying next executable...');
+          console.log('⚠️ Python process failed, trying next executable...');
           currentExecutableIndex++;
           setTimeout(tryStartPython, 1000);
+        } else if (code !== 0) {
+          console.error('❌ Final Python executable failed. No more options to try.');
         }
       });
 
       pythonProcess.on('error', (error) => {
-        console.error(`Failed to start Python with ${pythonExe}:`, error.message);
+        const result = `${pythonExe}: ${error.message}`;
+        pythonCheckResults.push(result);
+        console.error(`🐍 Failed to start Python with ${pythonExe}: ${error.message}`);
+        
+        // Provide specific error help
+        if (error.code === 'ENOENT') {
+          console.error(`❌ ${pythonExe} not found in PATH`);
+        } else if (error.code === 'EACCES') {
+          console.error(`❌ Permission denied for ${pythonExe}`);
+        }
+        
         pythonProcess = null;
         
         // Try next executable
@@ -124,7 +161,10 @@ const startPythonAPI = () => {
     tryStartPython();
 
   } catch (error) {
-    console.error('Error in startPythonAPI:', error);
+    console.error('❌ Error in startPythonAPI:', error);
+    if (process.platform === 'win32') {
+      console.error('🔧 This may be a Windows-specific issue. Check the troubleshooting steps above.');
+    }
   }
 };
 
