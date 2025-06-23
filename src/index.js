@@ -23,49 +23,93 @@ const startPythonAPI = () => {
     const pythonApiPath = path.join(resourcesPath, 'python_api');
     const pythonScript = path.join(pythonApiPath, 'run.py');
     
-    console.log('Starting Python API server...');
+    console.log('=== Python API Startup Debug ===');
+    console.log('Platform:', process.platform);
+    console.log('App packaged:', app.isPackaged);
     console.log('Resources path:', resourcesPath);
     console.log('Python API path:', pythonApiPath);
     console.log('Python script:', pythonScript);
     
-    // Try different Python executables (python, python3, py)
-    const pythonExecutables = ['python', 'python3', 'py'];
-    let pythonExe = 'python';
+    // Check if files exist
+    const fs = require('fs');
+    console.log('Python API directory exists:', fs.existsSync(pythonApiPath));
+    console.log('Python script exists:', fs.existsSync(pythonScript));
     
-    // Start Python process
-    pythonProcess = spawn(pythonExe, [pythonScript], {
-      cwd: pythonApiPath,
-      stdio: ['pipe', 'pipe', 'pipe']
-    });
-
-    pythonProcess.stdout.on('data', (data) => {
-      console.log(`Python API: ${data}`);
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      console.error(`Python API Error: ${data}`);
-    });
-
-    pythonProcess.on('close', (code) => {
-      console.log(`Python API process exited with code ${code}`);
-      pythonProcess = null;
-    });
-
-    pythonProcess.on('error', (error) => {
-      console.error('Failed to start Python API:', error);
-      // Try alternative Python executables
-      if (pythonExecutables.length > 1) {
-        pythonExecutables.shift();
-        pythonExe = pythonExecutables[0];
-        console.log(`Trying alternative Python executable: ${pythonExe}`);
-        // Recursive retry with different executable
-        setTimeout(() => startPythonAPI(), 1000);
+    if (!fs.existsSync(pythonScript)) {
+      console.error('Python script not found! App may not work properly.');
+      console.log('Contents of resources directory:', fs.readdirSync(resourcesPath));
+      return;
+    }
+    
+    // Try different Python executables based on platform
+    const pythonExecutables = process.platform === 'win32' 
+      ? ['python', 'python3', 'py', 'python.exe']
+      : ['python3', 'python', '/usr/bin/python3', '/usr/local/bin/python3'];
+    
+    let currentExecutableIndex = 0;
+    
+    const tryStartPython = () => {
+      if (currentExecutableIndex >= pythonExecutables.length) {
+        console.error('All Python executables failed. Python API will not start.');
+        return;
       }
-      pythonProcess = null;
-    });
+      
+      const pythonExe = pythonExecutables[currentExecutableIndex];
+      console.log(`Trying Python executable: ${pythonExe}`);
+      
+      // Start Python process
+      pythonProcess = spawn(pythonExe, [pythonScript], {
+        cwd: pythonApiPath,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, PYTHONPATH: pythonApiPath }
+      });
+
+      pythonProcess.stdout.on('data', (data) => {
+        const output = data.toString().trim();
+        console.log(`Python API stdout: ${output}`);
+        
+        // Check if server started successfully
+        if (output.includes('Running on') || output.includes('Flask') || output.includes('5000')) {
+          console.log('✅ Python API server started successfully!');
+        }
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        const error = data.toString().trim();
+        console.error(`Python API stderr: ${error}`);
+        
+        // Check for common errors
+        if (error.includes('ModuleNotFoundError') || error.includes('ImportError')) {
+          console.error('❌ Python dependencies missing. Please install required packages.');
+        }
+      });
+
+      pythonProcess.on('close', (code) => {
+        console.log(`Python API process exited with code ${code}`);
+        pythonProcess = null;
+        
+        if (code !== 0 && currentExecutableIndex < pythonExecutables.length - 1) {
+          console.log('Python process failed, trying next executable...');
+          currentExecutableIndex++;
+          setTimeout(tryStartPython, 1000);
+        }
+      });
+
+      pythonProcess.on('error', (error) => {
+        console.error(`Failed to start Python with ${pythonExe}:`, error.message);
+        pythonProcess = null;
+        
+        // Try next executable
+        currentExecutableIndex++;
+        setTimeout(tryStartPython, 1000);
+      });
+    };
+    
+    // Start the first attempt
+    tryStartPython();
 
   } catch (error) {
-    console.error('Error starting Python API:', error);
+    console.error('Error in startPythonAPI:', error);
   }
 };
 

@@ -194,6 +194,21 @@ jobs:
           - **Windows**: Download `FowCrawler-Setup.exe` for easy installation
           - **macOS**: Download the `.zip` file and extract
           
+          ### 📋 Installation Guides
+          - **Windows Users**: See [Windows Installation Guide](https://github.com/${{ github.repository }}/blob/main/WINDOWS_INSTALL_GUIDE.md)
+          - **macOS Users**: See [macOS Installation Guide](https://github.com/${{ github.repository }}/blob/main/MACOS_INSTALL_GUIDE.md)
+          
+          ### 🚨 Common Issues & Solutions
+          
+          **macOS "App is damaged" error**: 
+          - Right-click the app → "Open" → "Open" in security dialog
+          - See full guide: [macOS Installation Guide](https://github.com/${{ github.repository }}/blob/main/MACOS_INSTALL_GUIDE.md)
+          
+          **Windows blank screen/nothing shows**: 
+          - Install Python 3.8+ from python.org
+          - Run: `pip install flask selenium beautifulsoup4 pandas requests webdriver-manager`
+          - See full guide: [Windows Installation Guide](https://github.com/${{ github.repository }}/blob/main/WINDOWS_INSTALL_GUIDE.md)
+          
           ### Features
           - League of Legends player ranking search
           - Filter by winrate and rank range
@@ -202,15 +217,21 @@ jobs:
           - Automatic Python API integration
           
           ### System Requirements
-          - **Windows**: Windows 10 or later
-          - **macOS**: macOS 10.15 or later
-          - **Python**: 3.8+ (included in Windows build)
+          - **Windows**: Windows 10 or later + Python 3.8+
+          - **macOS**: macOS 10.15 or later + Python 3.8+
+          - **Memory**: 4GB RAM minimum
+          - **Storage**: 500MB-1GB free space
           
-          ### Installation
-          - **Windows**: Run the installer and follow the setup wizard
-          - **macOS**: Extract and run the executable
+          ### First Time Setup
+          1. **Install Python** 3.8+ from [python.org](https://www.python.org/downloads/)
+          2. **Install dependencies**: `pip install flask selenium beautifulsoup4 pandas requests webdriver-manager`
+          3. **Follow platform-specific installation guide** (links above)
+          4. **Launch the app** - first startup may take 30-60 seconds
           
-          For detailed instructions, see [BUILD_WINDOWS.md](https://github.com/${{ github.repository }}/blob/main/BUILD_WINDOWS.md)
+          ### 🔒 Security Note
+          This app is not code-signed (requires $99/year Apple Developer certificate). Security warnings are normal and can be safely bypassed using the installation guides above.
+          
+          For detailed instructions and troubleshooting, see the installation guides linked above.
         draft: false
         prerelease: false
         
