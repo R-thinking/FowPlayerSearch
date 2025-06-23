@@ -123,8 +123,20 @@ jobs:
         path: artifacts
         
     - name: Display structure of downloaded files
-      run: ls -la artifacts/
-      
+      run: |
+        echo "=== Artifacts directory structure ==="
+        find artifacts -type f -name "*.exe" -o -name "*.zip" -o -name "*.nupkg" -o -name "*.dmg" | sort
+        echo ""
+        echo "=== Detailed file listing ==="
+        ls -la artifacts/ || true
+        ls -la artifacts/*/ || true
+        echo ""
+        echo "=== Windows artifacts ==="
+        ls -la artifacts/FowCrawler-Windows/ || true
+        echo ""
+        echo "=== macOS artifacts ==="
+        ls -la artifacts/FowCrawler-macOS/ || true
+        
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -160,34 +172,75 @@ jobs:
         draft: false
         prerelease: false
         
+    # Find and upload Windows files
+    - name: Find Windows files
+      id: find-windows
+      run: |
+        echo "Looking for Windows files..."
+        SETUP_EXE=$(find artifacts/FowCrawler-Windows -name "*Setup*.exe" -o -name "*setup*.exe" -o -name "*.exe" | head -1)
+        WIN_ZIP=$(find artifacts/FowCrawler-Windows -name "*.zip" | head -1)
+        
+        echo "setup_exe=${SETUP_EXE}" >> $GITHUB_OUTPUT
+        echo "win_zip=${WIN_ZIP}" >> $GITHUB_OUTPUT
+        
+        echo "Found setup exe: ${SETUP_EXE}"
+        echo "Found win zip: ${WIN_ZIP}"
+        
+    - name: Find macOS files
+      id: find-macos
+      run: |
+        echo "Looking for macOS files..."
+        MACOS_ZIP=$(find artifacts/FowCrawler-macOS -name "*.zip" | head -1)
+        MACOS_DMG=$(find artifacts/FowCrawler-macOS -name "*.dmg" | head -1)
+        
+        echo "macos_zip=${MACOS_ZIP}" >> $GITHUB_OUTPUT
+        echo "macos_dmg=${MACOS_DMG}" >> $GITHUB_OUTPUT
+        
+        echo "Found macOS zip: ${MACOS_ZIP}"
+        echo "Found macOS dmg: ${MACOS_DMG}"
+        
     # Upload Windows files
     - name: Upload Windows Installer
+      if: steps.find-windows.outputs.setup_exe != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/FowCrawler-Windows/FowCrawler-Setup.exe
+        asset_path: ${{ steps.find-windows.outputs.setup_exe }}
         asset_name: FowCrawler-Setup.exe
         asset_content_type: application/octet-stream
         
     - name: Upload Windows ZIP
+      if: steps.find-windows.outputs.win_zip != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/FowCrawler-Windows/FowCrawler-win32-x64.zip
+        asset_path: ${{ steps.find-windows.outputs.win_zip }}
         asset_name: FowCrawler-Windows.zip
         asset_content_type: application/zip
         
     # Upload macOS files
     - name: Upload macOS ZIP
+      if: steps.find-macos.outputs.macos_zip != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/FowCrawler-macOS/FowCrawler-darwin-x64.zip
+        asset_path: ${{ steps.find-macos.outputs.macos_zip }}
         asset_name: FowCrawler-macOS.zip
-        asset_content_type: application/zip 
+        asset_content_type: application/zip
+        
+    - name: Upload macOS DMG
+      if: steps.find-macos.outputs.macos_dmg != ''
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.find-macos.outputs.macos_dmg }}
+        asset_name: FowCrawler-macOS.dmg
+        asset_content_type: application/octet-stream 
