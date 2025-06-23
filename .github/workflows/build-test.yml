@@ -42,6 +42,9 @@ jobs:
     - name: Install Node.js dependencies
       run: npm ci
       
+    - name: Verify icon files
+      run: npm run verify-icons
+      
     - name: Build React app
       run: npm run build
       
@@ -85,6 +88,9 @@ jobs:
     - name: Install Node.js dependencies
       run: npm ci
       
+    - name: Verify icon files
+      run: npm run verify-icons
+      
     - name: Build React app
       run: npm run build
       
@@ -125,6 +131,9 @@ jobs:
         
     - name: Install Node.js dependencies
       run: npm ci
+      
+    - name: Verify icon files
+      run: npm run verify-icons
       
     - name: Build React app
       run: npm run build

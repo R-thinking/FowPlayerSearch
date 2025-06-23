@@ -1,5 +1,6 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
+const path = require('path');
 
 module.exports = {
   packagerConfig: {
@@ -7,7 +8,7 @@ module.exports = {
     name: 'FowCrawler',
     productName: 'FowCrawler',
     executableName: 'FowCrawler',
-    icon: './assets/icon', // Will look for icon.ico on Windows, icon.icns on macOS
+    icon: path.join(__dirname, 'assets', 'icon'), // More robust path handling
     appBundleId: 'com.rthinking.fowcrawler',
     extraResource: [
       './python_api',
@@ -29,7 +30,7 @@ module.exports = {
         authors: 'r-thinking',
         exe: 'FowCrawler.exe',
         setupExe: 'FowCrawler-Setup.exe',
-        setupIcon: './assets/icon.ico',
+        setupIcon: path.join(__dirname, 'assets', 'icon.ico'), // Absolute path to ICO file
         noMsi: true, // Set to false if you want MSI installer too
       },
     },
