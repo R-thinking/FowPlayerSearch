@@ -18,9 +18,9 @@
 
 ## 🐍 Python Requirements
 
-FowCrawler includes Python dependencies, but you may need to install Python separately:
+FowCrawler now includes all Python dependencies automatically! You only need Python itself installed:
 
-### Install Python (if needed)
+### Install Python (Required)
 
 1. **Download Python 3.8+** from [python.org](https://www.python.org/downloads/windows/)
 2. **Check "Add Python to PATH"** during installation
@@ -29,17 +29,7 @@ FowCrawler includes Python dependencies, but you may need to install Python sepa
    python --version
    ```
 
-### Install Required Packages
-
-Open Command Prompt as Administrator and run:
-
-```cmd
-# Install required packages
-pip install flask selenium beautifulsoup4 pandas requests webdriver-manager
-
-# Or if you have requirements.txt:
-pip install -r requirements.txt
-```
+**Note**: You no longer need to manually install packages like Flask, Selenium, etc. - they're included with the app!
 
 ## 🔧 Troubleshooting
 
@@ -56,9 +46,12 @@ This usually means the Python API backend isn't starting properly.
 
 #### Solution 2: Install Dependencies Manually
 
+Python dependencies are now included with the app. If you're still having issues:
+
 ```cmd
-# Open Command Prompt as Administrator
-pip install flask selenium beautifulsoup4 pandas requests webdriver-manager
+# Only install Python itself - dependencies are bundled
+# Check if Python is properly installed
+python --version
 ```
 
 #### Solution 3: Check Windows Defender/Antivirus
@@ -109,8 +102,9 @@ If the app opens but the backend doesn't work:
 # Navigate to the app directory
 cd "C:\Program Files\FowCrawler" # or wherever installed
 
-# Install dependencies
-pip install -r requirements.txt
+# Dependencies are now bundled with the app!
+# You only need Python itself installed
+python --version
 ```
 
 #### Check for Port Conflicts

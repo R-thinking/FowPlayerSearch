@@ -1,0 +1,3 @@
+Python packages installed on: 2025-06-23T06:59:14.960Z
+Packages: Flask_Cors-4.0.0.dist-info, Flask_SocketIO-5.5.1.dist-info, beautifulsoup4-4.12.2.dist-info, bin, bs4, flask, flask-3.0.0.dist-info, flask_cors, flask_socketio, lxml, lxml-4.9.3-py3.10.egg-info, pandas, pandas-2.1.4.dist-info, requests, requests-2.31.0.dist-info, selenium, selenium-4.15.0.dist-info
+Python executable: python3

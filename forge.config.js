@@ -12,7 +12,8 @@ module.exports = {
     appBundleId: 'com.rthinking.fowcrawler',
     extraResource: [
       './python_api',
-      './requirements.txt'
+      './requirements.txt',
+      './src/dist'
     ],
     win32metadata: {
       CompanyName: 'r-thinking',

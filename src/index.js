@@ -22,6 +22,7 @@ const startPythonAPI = () => {
     const resourcesPath = process.resourcesPath || path.join(__dirname, '..');
     const pythonApiPath = path.join(resourcesPath, 'python_api');
     const pythonScript = path.join(pythonApiPath, 'run.py');
+    const pythonPackagesPath = path.join(pythonApiPath, 'python_packages');
     
     console.log('=== Python API Startup Debug ===');
     console.log('Platform:', process.platform);
@@ -29,11 +30,20 @@ const startPythonAPI = () => {
     console.log('Resources path:', resourcesPath);
     console.log('Python API path:', pythonApiPath);
     console.log('Python script:', pythonScript);
+    console.log('Python packages path:', pythonPackagesPath);
     
     // Check if files exist
     const fs = require('fs');
     console.log('Python API directory exists:', fs.existsSync(pythonApiPath));
     console.log('Python script exists:', fs.existsSync(pythonScript));
+    console.log('Python packages directory exists:', fs.existsSync(pythonPackagesPath));
+    
+    if (fs.existsSync(pythonPackagesPath)) {
+      const packages = fs.readdirSync(pythonPackagesPath).filter(item => 
+        fs.statSync(path.join(pythonPackagesPath, item)).isDirectory()
+      );
+      console.log('Available Python packages:', packages.join(', '));
+    }
     
     if (!fs.existsSync(pythonScript)) {
       console.error('Python script not found! App may not work properly.');
@@ -61,7 +71,12 @@ const startPythonAPI = () => {
       pythonProcess = spawn(pythonExe, [pythonScript], {
         cwd: pythonApiPath,
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, PYTHONPATH: pythonApiPath }
+        env: { 
+          ...process.env, 
+          PYTHONPATH: fs.existsSync(pythonPackagesPath) 
+            ? `${pythonPackagesPath}${path.delimiter}${pythonApiPath}${path.delimiter}${process.env.PYTHONPATH || ''}`
+            : pythonApiPath
+        }
       });
 
       pythonProcess.stdout.on('data', (data) => {
@@ -171,7 +186,59 @@ const createWindow = () => {
     });
     
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // In production, the dist folder is in the app resources
+    const fs = require('fs');
+    let htmlPath;
+    
+    // Try different possible locations for the HTML file
+    const possiblePaths = [
+      path.join(__dirname, 'dist/index.html'), // Most likely location (src/dist from src/index.js)
+      path.join(process.resourcesPath, 'dist/index.html'), // extraResource location
+      path.join(__dirname, '../dist/index.html'),
+      path.join(process.resourcesPath, 'app/dist/index.html'),
+      path.join(__dirname, '../../dist/index.html'),
+      // If dist is in extraResource, it will be in the resources folder
+      path.join(process.resourcesPath, 'extraResources/dist/index.html')
+    ];
+    
+    console.log('=== HTML File Loading Debug ===');
+    console.log('__dirname:', __dirname);
+    console.log('process.resourcesPath:', process.resourcesPath);
+    console.log('app.isPackaged:', app.isPackaged);
+    console.log('app.getAppPath():', app.getAppPath());
+    
+    for (const testPath of possiblePaths) {
+      console.log(`Checking HTML path: ${testPath}`);
+      if (fs.existsSync(testPath)) {
+        htmlPath = testPath;
+        console.log(`✅ Found HTML file at: ${htmlPath}`);
+        break;
+      }
+    }
+    
+    if (!htmlPath) {
+      console.error('❌ Could not find index.html file!');
+      console.log('Available directories:');
+      try {
+        console.log('Contents of __dirname:', fs.readdirSync(__dirname));
+        if (fs.existsSync(path.join(__dirname, '..'))) {
+          console.log('Contents of __dirname/../:', fs.readdirSync(path.join(__dirname, '..')));
+        }
+        if (process.resourcesPath && fs.existsSync(process.resourcesPath)) {
+          console.log('Contents of resourcesPath:', fs.readdirSync(process.resourcesPath));
+        }
+        if (process.resourcesPath && fs.existsSync(path.join(process.resourcesPath, 'extraResources'))) {
+          console.log('Contents of extraResources:', fs.readdirSync(path.join(process.resourcesPath, 'extraResources')));
+        }
+      } catch (error) {
+        console.error('Error reading directories:', error);
+      }
+      // Fallback to the most common path
+      htmlPath = path.join(__dirname, '../dist/index.html');
+    }
+    
+    console.log(`Loading HTML from: ${htmlPath}`);
+    mainWindow.loadFile(htmlPath);
   }
   
   // Note: Removed auto-reload on focus to preserve React app state
