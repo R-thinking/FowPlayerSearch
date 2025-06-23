@@ -96,11 +96,24 @@ jobs:
     # Debug build outputs
     - name: Debug Windows build output
       if: matrix.os == 'windows-latest'
+      shell: pwsh
       run: |
-        echo "=== Windows build output structure ==="
-        find out -type f -name "*.exe" -o -name "*.zip" -o -name "*.nupkg" | sort || echo "No Windows build outputs found"
-        ls -la out/ || echo "No out directory"
-        ls -la out/make/ || echo "No make directory"
+        Write-Host "=== Windows build output structure ==="
+        if (Test-Path "out") {
+          Get-ChildItem -Path "out" -Recurse -Include "*.exe", "*.zip", "*.nupkg" | Select-Object FullName | Sort-Object FullName
+          Write-Host ""
+          Write-Host "=== out directory ==="
+          Get-ChildItem -Path "out" -Force
+          Write-Host ""
+          if (Test-Path "out/make") {
+            Write-Host "=== make directory ==="
+            Get-ChildItem -Path "out/make" -Force -Recurse
+          } else {
+            Write-Host "No make directory"
+          }
+        } else {
+          Write-Host "No out directory found"
+        }
         
     - name: Debug macOS build output
       if: matrix.os == 'macos-latest'
@@ -153,17 +166,18 @@ jobs:
     - name: Display structure of downloaded files
       run: |
         echo "=== Artifacts directory structure ==="
-        find artifacts -type f -name "*.exe" -o -name "*.zip" -o -name "*.nupkg" -o -name "*.dmg" | sort
+        find artifacts -type f -name "*.exe" -o -name "*.zip" -o -name "*.nupkg" -o -name "*.dmg" 2>/dev/null | sort || echo "No build artifacts found"
         echo ""
         echo "=== Detailed file listing ==="
-        ls -la artifacts/ || true
-        ls -la artifacts/*/ || true
+        ls -la artifacts/ 2>/dev/null || echo "No artifacts directory"
         echo ""
-        echo "=== Windows artifacts ==="
-        ls -la artifacts/FowCrawler-Windows/ || true
-        echo ""
-        echo "=== macOS artifacts ==="
-        ls -la artifacts/FowCrawler-macOS/ || true
+        for dir in artifacts/*/; do
+          if [ -d "$dir" ]; then
+            echo "=== Contents of $dir ==="
+            ls -la "$dir" 2>/dev/null || echo "Directory empty or inaccessible"
+            echo ""
+          fi
+        done
         
     - name: Create Release
       id: create_release
