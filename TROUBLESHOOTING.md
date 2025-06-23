@@ -179,4 +179,12 @@ FowCrawler/
 ├── forge.config.no-icons.js  # Fallback config (no icons)
 └── scripts/
     └── verify-icons.js  # Icon verification script
-``` 
+```
+
+## Supported Platforms
+
+FowCrawler builds are available for:
+- **Windows** (win32/x64) - Primary target platform
+- **macOS** (darwin/x64) - Secondary target platform
+
+Linux builds have been removed to simplify the build process and focus on the primary target platforms. 

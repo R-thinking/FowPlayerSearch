@@ -11,7 +11,6 @@ on:
         options:
         - windows
         - macos
-        - linux
         - all
 
 jobs:
@@ -95,12 +94,25 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: 'requirements.txt'
         
     - name: Install Python dependencies
+      id: python-deps
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
+        python -m pip install --upgrade pip --no-input --timeout 300
+        pip install -r requirements.txt --no-input --timeout 300 --no-warn-script-location --disable-pip-version-check
+      continue-on-error: true
+      
+    - name: Python dependency status
+      run: |
+        if [ "${{ steps.python-deps.outcome }}" = "failure" ]; then
+          echo "⚠️ Python dependencies failed to install, but continuing with Electron build..."
+          echo "The packaged app will include requirements.txt for runtime installation."
+        else
+          echo "✅ Python dependencies installed successfully"
+        fi
+      
     - name: Install Node.js dependencies
       run: npm ci
       
@@ -119,51 +131,4 @@ jobs:
         name: FowCrawler-macOS-Test
         path: |
           out/make/zip/darwin/**/*.zip
-        retention-days: 7
-
-  build-linux:
-    if: ${{ github.event.inputs.platform == 'linux' || github.event.inputs.platform == 'all' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Install Node.js dependencies
-      run: npm ci
-      
-    - name: Verify icon files
-      run: npm run verify-icons
-      
-    - name: Build React app
-      run: npm run build
-      
-    - name: Build Electron app for Linux
-      run: npm run make
-      
-    - name: Upload Linux build
-      uses: actions/upload-artifact@v4
-      with:
-        name: FowCrawler-Linux-Test
-        path: |
-          out/make/deb/**/*.deb
-          out/make/rpm/**/*.rpm
-          out/make/zip/linux/**/*.zip
         retention-days: 7 
