@@ -1,247 +1,196 @@
-# Windows Installation Guide for FowCrawler
+# FowCrawler Windows Installation Guide
 
-## 🚀 Installation
+## Prerequisites
 
-### Method 1: Installer (Recommended)
+1. **Node.js** (v16 or higher)
+   - Download from: https://nodejs.org/
+   - Choose the LTS version
+   - During installation, make sure "Add to PATH" is checked
 
-1. **Download** `FowCrawler-Setup.exe` from the release
-2. **Run the installer** (you may see Windows Defender warnings)
-3. **Click "More info"** → **"Run anyway"** if Windows Defender blocks it
-4. **Follow the installation wizard**
-5. **Launch from Start Menu** or Desktop shortcut
+2. **Python 3.7+**
+   - Download from: https://www.python.org/downloads/windows/
+   - **IMPORTANT**: During installation, check "Add Python to PATH"
+   - Choose "Install for all users" if you have admin rights
 
-### Method 2: Portable Version
+3. **Google Chrome or Chromium**
+   - Download from: https://www.google.com/chrome/
+   - Required for web scraping functionality
 
-1. **Download** `FowCrawler-Windows.zip`
-2. **Extract** to a folder (e.g., `C:\FowCrawler\`)
-3. **Run** `FowCrawler.exe` from the extracted folder
+## Installation Steps
 
-## 🐍 Python Requirements
-
-FowCrawler now includes all Python dependencies automatically! You only need Python itself installed:
-
-### Install Python (Required)
-
-1. **Download Python 3.8+** from [python.org](https://www.python.org/downloads/windows/)
-2. **Check "Add Python to PATH"** during installation
-3. **Verify installation** by opening Command Prompt and running:
+1. **Clone or Download the Repository**
    ```cmd
-   python --version
+   git clone <repository-url>
+   cd FowCrawler
    ```
 
-**Note**: You no longer need to manually install packages like Flask, Selenium, etc. - they're included with the app!
+2. **Install Node.js Dependencies**
+   ```cmd
+   npm install
+   ```
 
-## 🔧 Troubleshooting
+3. **Install Python Dependencies**
+   ```cmd
+   pip install -r requirements.txt
+   ```
 
-### ERR_CONNECTION_REFUSED Error
-
-If you see `GET http://localhost:5002/api/health/ net::ERR_CONNECTION_REFUSED`, this means the Python API server isn't starting properly.
-
-#### Step 1: Check Python Installation
-
-1. **Open Command Prompt** (Run as Administrator)
-2. **Test Python**:
+4. **Verify Installation**
    ```cmd
    python --version
+   node --version
+   npm --version
    ```
-   If this fails, try:
+
+## Running the Application
+
+### ✅ Development Mode (Recommended)
+
+**Use the correct startup command:**
+```cmd
+npm run start:all
+```
+
+This command will:
+- Start the Python API server on port 5002
+- Start the Vite development server on port 3000
+- Launch the Electron application
+- Enable hot reloading for development
+
+### ❌ Common Mistake
+
+**DON'T use this command for development:**
+```cmd
+npm run start
+```
+This only starts Electron without the Python API, causing connection errors.
+
+### Alternative Development Commands
+
+If you prefer manual control:
+```cmd
+# Terminal 1: Start Python API
+npm run dev:api
+
+# Terminal 2: Start Vite dev server
+npm run dev:vite
+
+# Terminal 3: Start Electron app
+npm run dev:electron
+```
+
+## Building for Production
+
+```cmd
+# Build for Windows
+npm run build:win
+
+# The built application will be in the out/ directory
+```
+
+## Troubleshooting
+
+### Python API Connection Issues
+
+**Problem**: "Failed to load resource GET http://localhost:5002/api/health"
+
+**Solutions**:
+1. **Use correct startup command**: `npm run start:all` (not `npm run start`)
+2. **Check Python installation**:
+   ```cmd
+   python --version
+   python -c "import flask; print('Flask installed')"
+   ```
+3. **Verify Python is in PATH**:
+   ```cmd
+   where python
+   ```
+
+### Python Not Found Errors
+
+**Problem**: "'python' is not recognized as an internal or external command"
+
+**Solutions**:
+1. **Reinstall Python** with "Add to PATH" checked
+2. **Restart Command Prompt** after Python installation
+3. **Try alternative commands**:
    ```cmd
    python3 --version
    py --version
    ```
 
-3. **If Python is not found**:
-   - Download Python from [python.org](https://www.python.org/downloads/windows/)
-   - **IMPORTANT**: Check "Add Python to PATH" during installation
-   - Restart your computer after installation
+### Permission Denied Errors
 
-#### Step 2: Check App Console Logs
+**Problem**: "Permission denied" or "Access is denied"
 
-1. **Run FowCrawler from Command Prompt** to see debug output:
+**Solutions**:
+1. **Run Command Prompt as Administrator**
+2. **Check Windows Defender** - it may be blocking Python
+3. **Disable antivirus temporarily** during installation
+
+### Chrome/Selenium Issues
+
+**Problem**: Selenium can't find Chrome driver
+
+**Solutions**:
+1. **Install Google Chrome** from official website
+2. **Update Chrome** to latest version
+3. **Check Chrome installation path**:
+   - Usually: `C:\Program Files\Google\Chrome\Application\chrome.exe`
+
+### Port Already in Use
+
+**Problem**: "Port 5002 is already in use"
+
+**Solutions**:
+1. **Kill existing processes**:
    ```cmd
-   cd "C:\Program Files\FowCrawler"  # or wherever installed
-   FowCrawler.exe
+   taskkill /f /im python.exe
+   taskkill /f /im node.exe
    ```
-
-2. **Look for these messages**:
-   - `✅ Python API server started successfully on port 5002!` = Working
-   - `❌ All Python executables failed` = Python not found/working
-   - `🐍 Python check results:` = Shows what was tried
-
-#### Step 3: Manual Python Test
-
-Test if Python can run the API manually:
-
-1. **Navigate to app directory**:
+2. **Check what's using the port**:
    ```cmd
-   cd "C:\Program Files\FowCrawler\resources\python_api"
+   netstat -ano | findstr :5002
    ```
 
-2. **Try running the API**:
+### Module Not Found Errors
+
+**Problem**: "ModuleNotFoundError: No module named 'flask'"
+
+**Solutions**:
+1. **Reinstall Python dependencies**:
    ```cmd
-   python run.py
+   pip install --upgrade pip
+   pip install -r requirements.txt
    ```
-
-3. **If it works**, you should see:
-   ```
-   🚀 Starting FOW Crawler API with WebSocket support...
-   📡 API will be available at: http://localhost:5002
-   ```
-
-#### Step 4: Windows Defender Issues
-
-Windows Defender may block the Python process:
-
-1. **Open Windows Security**
-2. **Go to Virus & threat protection**
-3. **Add exclusion** for FowCrawler installation folder
-4. **Temporarily disable real-time protection** to test
-
-### App Opens But Shows Nothing/Blank Screen
-
-This usually means the Python API backend isn't starting properly.
-
-#### Solution 1: Check Python Installation
-
-1. **Open Command Prompt**
-2. **Run**: `python --version` or `python3 --version`
-3. **If not found**: Install Python from python.org
-4. **Restart the app** after installing Python
-
-#### Solution 2: Install Dependencies Manually
-
-Python dependencies are now included with the app. If you're still having issues:
-
-```cmd
-# Only install Python itself - dependencies are bundled
-# Check if Python is properly installed
-python --version
-```
-
-#### Solution 3: Check Windows Defender/Antivirus
-
-1. **Windows Defender** might be blocking the Python process
-2. **Add exception** for the FowCrawler installation folder
-3. **Temporarily disable** real-time protection to test
-
-### Windows Defender SmartScreen Warning
-
-If you see "Windows protected your PC":
-
-1. **Click "More info"**
-2. **Click "Run anyway"**
-3. This is normal for unsigned applications
-
-### App Won't Start at All
-
-#### Check for Missing Dependencies
-
-1. **Install Visual C++ Redistributable**:
-   - Download from Microsoft's website
-   - Install both x64 and x86 versions
-
-2. **Install .NET Framework** (if needed):
-   - Usually pre-installed on Windows 10/11
-   - Download from Microsoft if missing
-
-#### Run as Administrator
-
-1. **Right-click** on FowCrawler.exe
-2. **Select "Run as administrator"**
-3. This can help with permission issues
-
-### Python API Won't Start
-
-If the app opens but the backend doesn't work:
-
-#### Check Python PATH
-
-1. **Open Command Prompt**
-2. **Run**: `where python` or `where python3`
-3. **If not found**: Reinstall Python with "Add to PATH" checked
-
-#### Manual Dependency Installation
-
-```cmd
-# Navigate to the app directory
-cd "C:\Program Files\FowCrawler" # or wherever installed
-
-# Dependencies are now bundled with the app!
-# You only need Python itself installed
-python --version
-```
-
-#### Check for Port Conflicts
-
-The app uses port 5002 by default. If another app is using it:
-
-1. **Close other applications** that might use port 5002
-2. **Restart FowCrawler**
-
-**Note**: We use port 5002 instead of 5000 because port 5000 is commonly used by macOS Control Center (AirPlay Receiver) and can cause conflicts.
-
-### Performance Issues
-
-#### Chrome/Selenium Issues
-
-1. **Update Chrome** to the latest version
-2. **Clear Chrome cache** and restart
-3. **Close other Chrome instances** before using the app
-
-#### Memory Issues
-
-1. **Close unnecessary programs**
-2. **Ensure 4GB+ RAM available**
-3. **Check Task Manager** for high memory usage
-
-## 🔍 Getting Debug Information
-
-### Method 1: Run from Command Prompt
-
-1. **Open Command Prompt**
-2. **Navigate to app directory**:
+2. **Use pip3 if pip doesn't work**:
    ```cmd
-   cd "C:\Program Files\FowCrawler"
+   pip3 install -r requirements.txt
    ```
-3. **Run the app**:
+3. **Install packages individually**:
    ```cmd
-   FowCrawler.exe
+   pip install flask flask-cors selenium beautifulsoup4 pandas requests
    ```
-4. **Check console output** for error messages
 
-### Method 2: Check Event Viewer
+## Development Tips
 
-1. **Open Event Viewer** (Windows + R, type `eventvwr`)
-2. **Navigate to**: Windows Logs → Application
-3. **Look for FowCrawler entries** with errors
+1. **Use Windows Terminal** or PowerShell for better experience
+2. **Keep Chrome updated** for Selenium compatibility
+3. **Use `npm run start:all`** for development - it handles everything
+4. **Check the console output** for detailed error messages
+5. **Enable Windows Developer Mode** for better debugging
 
-## 📋 System Requirements
+## Production Build Notes
 
-- **Windows**: 10 or later (64-bit recommended)
-- **Python**: 3.8 or later
-- **Memory**: 4GB RAM minimum
-- **Storage**: 1GB free space
-- **Internet**: Required for League of Legends data fetching
+- The production build includes all Python dependencies
+- Chrome driver is bundled automatically
+- No manual Python installation needed for end users
+- Built application is portable and self-contained
 
-## 🛡️ Security Notes
+## Getting Help
 
-### Windows Defender Warnings
-
-The app may trigger Windows Defender because:
-- It's not code-signed (requires expensive certificate)
-- It uses web scraping (Selenium/ChromeDriver)
-- It makes network requests
-
-**The app is safe** - you can review the source code at: [GitHub Repository](https://github.com/R-thinking/FowPlayerSearch)
-
-### Firewall Settings
-
-If the app can't connect to League of Legends APIs:
-1. **Allow FowCrawler** through Windows Firewall
-2. **Check corporate/antivirus firewalls**
-
-## 🆘 Still Need Help?
-
-1. **Check the GitHub Issues**: [Issues Page](https://github.com/R-thinking/FowPlayerSearch/issues)
-2. **Run with debug output** using Command Prompt method above
-3. **Include error messages** when reporting issues 
+If you encounter issues:
+1. Check the console output for detailed error messages
+2. Verify all prerequisites are installed correctly
+3. Try running `npm run start:all` instead of `npm run start`
+4. Check Windows Defender/antivirus settings
+5. Run Command Prompt as Administrator if needed 
