@@ -84,7 +84,7 @@ const startPythonAPI = () => {
         console.log(`Python API stdout: ${output}`);
         
         // Check if server started successfully
-        if (output.includes('Running on') || output.includes('Flask') || output.includes('5001')) {
+        if (output.includes('Running on') || output.includes('Flask') || output.includes('5000')) {
           console.log('✅ Python API server started successfully!');
         }
       });

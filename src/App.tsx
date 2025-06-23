@@ -126,10 +126,12 @@ const App: React.FC = () => {
     const checkServerStatus = async () => {
       try {
         setServerStatus('checking');
-        const response = await fetch('http://localhost:5001/api/health', {
+        const response = await fetch('http://localhost:5000/api/health', {
           method: 'GET',
-          timeout: 5000
-        } as any);
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
         if (response.ok) {
           setServerStatus('online');

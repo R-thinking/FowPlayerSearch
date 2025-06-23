@@ -151,7 +151,7 @@ out/FowCrawler-win32-x64/
 ## Important Notes
 
 ### Python API Integration
-The Windows build includes the Python API server that runs locally on port 5001. Make sure:
+The Windows build includes the Python API server that runs locally on port 5000. Make sure:
 
 1. **Python Dependencies** are included:
    ```bash

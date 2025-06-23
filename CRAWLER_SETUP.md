@@ -93,7 +93,7 @@ python run.py
 
 ## API Endpoints
 
-Once running, the API will be available at `http://localhost:5001`:
+Once running, the API will be available at `http://localhost:5000`:
 
 - **Health Check**: `GET /api/health`
 - **Get Ranking Data**: `GET /api/ranking?region=kr&page=1&method=selenium`
@@ -105,13 +105,13 @@ Test the API endpoints:
 
 ```bash
 # Health check
-curl http://localhost:5001/api/health
+curl http://localhost:5000/api/health
 
 # Get ranking data
-curl "http://localhost:5001/api/ranking?region=kr&page=1&method=selenium"
+curl "http://localhost:5000/api/ranking?region=kr&page=1&method=selenium"
 
 # Export CSV
-curl "http://localhost:5001/api/ranking/export?region=kr&page=1" -o ranking.csv
+curl "http://localhost:5000/api/ranking/export?region=kr&page=1" -o ranking.csv
 ```
 
 ## Usage in Electron App
@@ -129,8 +129,8 @@ curl "http://localhost:5001/api/ranking/export?region=kr&page=1" -o ranking.csv
 ### Common Issues
 
 1. **Port conflicts**:
-   - Ensure Python API is running on port 5001
-   - Check if port 5001 is already in use
+   - Ensure Python API is running on port 5000
+   - Check if port 5000 is already in use
 
 #### 2. Chrome/ChromeDriver Issues
 ```bash

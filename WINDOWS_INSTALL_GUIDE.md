@@ -109,9 +109,9 @@ python --version
 
 #### Check for Port Conflicts
 
-The app uses port 5001 by default. If another app is using it:
+The app uses port 5000 by default. If another app is using it:
 
-1. **Close other applications** that might use port 5001
+1. **Close other applications** that might use port 5000
 2. **Restart FowCrawler**
 
 ### Performance Issues

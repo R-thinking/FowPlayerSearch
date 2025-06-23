@@ -10,13 +10,13 @@ from app import app, socketio
 
 if __name__ == '__main__':
     print("🚀 Starting FOW Crawler API with WebSocket support...")
-    print("📡 API will be available at: http://localhost:5001")
-    print("🔍 Health check: http://localhost:5001/api/health")
-    print("📊 Ranking endpoint: http://localhost:5001/api/ranking")
-    print("📈 Multi-page crawling: http://localhost:5001/api/ranking/multi")
-    print("📊 Progress tracking: http://localhost:5001/api/progress")
+    print("📡 API will be available at: http://localhost:5000")
+    print("🔍 Health check: http://localhost:5000/api/health")
+    print("📊 Ranking endpoint: http://localhost:5000/api/ranking")
+    print("📈 Multi-page crawling: http://localhost:5000/api/ranking/multi")
+    print("📊 Progress tracking: http://localhost:5000/api/progress")
     print("🔌 WebSocket events: connect, start_crawl, progress_update, etc.")
-    print("💾 Export endpoint: http://localhost:5001/api/ranking/export")
+    print("💾 Export endpoint: http://localhost:5000/api/ranking/export")
     print("\n" + "="*50)
     
     # Run the SocketIO app (which includes Flask)
@@ -24,6 +24,6 @@ if __name__ == '__main__':
         app,
         debug=True,
         host='0.0.0.0',
-        port=5001,
+        port=5000,
         allow_unsafe_werkzeug=True
     ) 
