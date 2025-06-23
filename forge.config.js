@@ -37,6 +37,19 @@ module.exports = {
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin', 'win32'],
+      config: {
+        // Ensure ZIP is created for both platforms
+      }
+    },
+    {
+      name: '@electron-forge/maker-dmg',
+      platforms: ['darwin'],
+      config: {
+        name: 'FowCrawler',
+        icon: path.join(__dirname, 'assets', 'icon.icns'),
+        background: null,
+        format: 'UDZO'
+      }
     },
   ],
   plugins: [

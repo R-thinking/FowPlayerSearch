@@ -85,6 +85,25 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: npm run make
       
+    # Debug build outputs
+    - name: Debug Windows build output
+      if: matrix.os == 'windows-latest'
+      run: |
+        echo "=== Windows build output structure ==="
+        find out -type f -name "*.exe" -o -name "*.zip" -o -name "*.nupkg" | sort || echo "No Windows build outputs found"
+        ls -la out/ || echo "No out directory"
+        ls -la out/make/ || echo "No make directory"
+        
+    - name: Debug macOS build output
+      if: matrix.os == 'macos-latest'
+      run: |
+        echo "=== macOS build output structure ==="
+        find out -type f -name "*.zip" -o -name "*.dmg" -o -name "*.app" | sort || echo "No macOS build outputs found"
+        ls -la out/ || echo "No out directory"
+        ls -la out/make/ || echo "No make directory"
+        ls -la out/make/zip/ || echo "No zip directory"
+        ls -la out/make/zip/darwin/ || echo "No darwin directory"
+      
     # Upload Windows artifacts
     - name: Upload Windows artifacts
       if: matrix.os == 'windows-latest'
@@ -97,15 +116,16 @@ jobs:
           out/make/zip/win32/x64/*.zip
         retention-days: 30
         
-    # Upload macOS artifacts  
+    # Upload macOS artifacts with more flexible paths
     - name: Upload macOS artifacts
       if: matrix.os == 'macos-latest'
       uses: actions/upload-artifact@v4
       with:
         name: FowCrawler-macOS
         path: |
-          out/make/zip/darwin/x64/*.zip
+          out/make/zip/darwin/**/*.zip
           out/make/*.dmg
+          out/make/**/*.zip
         retention-days: 30
 
   release:
@@ -190,14 +210,32 @@ jobs:
       id: find-macos
       run: |
         echo "Looking for macOS files..."
-        MACOS_ZIP=$(find artifacts/FowCrawler-macOS -name "*.zip" | head -1)
-        MACOS_DMG=$(find artifacts/FowCrawler-macOS -name "*.dmg" | head -1)
+        
+        # Search for ZIP files in various possible locations
+        MACOS_ZIP=$(find artifacts/FowCrawler-macOS -name "*.zip" 2>/dev/null | head -1)
+        if [ -z "$MACOS_ZIP" ]; then
+          echo "No ZIP found in FowCrawler-macOS, searching more broadly..."
+          MACOS_ZIP=$(find artifacts -name "*darwin*.zip" -o -name "*macOS*.zip" -o -name "*mac*.zip" 2>/dev/null | head -1)
+        fi
+        
+        # Search for DMG files
+        MACOS_DMG=$(find artifacts/FowCrawler-macOS -name "*.dmg" 2>/dev/null | head -1)
+        if [ -z "$MACOS_DMG" ]; then
+          echo "No DMG found in FowCrawler-macOS, searching more broadly..."
+          MACOS_DMG=$(find artifacts -name "*.dmg" 2>/dev/null | head -1)
+        fi
         
         echo "macos_zip=${MACOS_ZIP}" >> $GITHUB_OUTPUT
         echo "macos_dmg=${MACOS_DMG}" >> $GITHUB_OUTPUT
         
         echo "Found macOS zip: ${MACOS_ZIP}"
         echo "Found macOS dmg: ${MACOS_DMG}"
+        
+        # If no files found, show what we do have
+        if [ -z "$MACOS_ZIP" ] && [ -z "$MACOS_DMG" ]; then
+          echo "⚠️ No macOS files found! Available files:"
+          find artifacts -type f 2>/dev/null || echo "No artifacts found at all"
+        fi
         
     # Upload Windows files
     - name: Upload Windows Installer
