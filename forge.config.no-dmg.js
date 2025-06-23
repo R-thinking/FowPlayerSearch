@@ -41,13 +41,6 @@ module.exports = {
         // Ensure ZIP is created for both platforms
       }
     },
-    {
-      name: '@electron-forge/maker-dmg',
-      platforms: ['darwin'],
-      config: {
-        name: 'FowCrawler'
-      }
-    },
   ],
   plugins: [
     // Fuses are used to enable/disable various Electron functionality
@@ -62,4 +55,4 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
-};
+}; 

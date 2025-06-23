@@ -84,6 +84,14 @@ jobs:
     - name: Build Electron app (macOS)
       if: matrix.os == 'macos-latest'
       run: npm run make
+      continue-on-error: true
+      id: macos-build
+      
+    - name: Build Electron app (macOS) - Fallback without DMG
+      if: matrix.os == 'macos-latest' && steps.macos-build.outcome == 'failure'
+      run: |
+        echo "Regular macOS build failed, trying without DMG maker..."
+        npx electron-forge make --config=forge.config.no-dmg.js
       
     # Debug build outputs
     - name: Debug Windows build output
