@@ -11,6 +11,11 @@ on:
         required: false
         default: 'v1.0.0'
 
+permissions:
+  contents: write
+  actions: read
+  checks: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
