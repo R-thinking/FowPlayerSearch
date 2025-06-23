@@ -124,14 +124,13 @@ curl "http://localhost:5001/api/ranking/export?region=kr&page=1" -o ranking.csv
 6. **View results** in the table below
 7. **Export to CSV** if needed
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
-#### 1. API Status shows "Disconnected"
-- Ensure Python API is running on port 5000
-- Check if port 5000 is already in use
-- Run `npm run dev:api` separately to see error messages
+1. **Port conflicts**:
+   - Ensure Python API is running on port 5001
+   - Check if port 5001 is already in use
 
 #### 2. Chrome/ChromeDriver Issues
 ```bash
