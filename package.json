@@ -23,6 +23,8 @@
     "start:all": "concurrently --kill-others --success first \"npm run dev:api\" \"npm run dev:vite\"  \"wait-on http://localhost:3000 http://localhost:5001 && NODE_ENV=development electron .\"",
     "build": "vite build",
     "build:win": "npm run verify-icons && vite build && npm run make:win",
+    "build:win-fallback": "vite build && electron-forge make --platform=win32 --config=./forge.config.no-icons.js",
+    "make:win-fallback": "electron-forge make --platform=win32 --config=./forge.config.no-icons.js",
     "preview": "vite preview",
     "setup:python": "cd python_api && python3 -m pip install -r ../requirements.txt --user",
     "clear-cache": "rm -rf node_modules/.cache && rm -rf dist",
