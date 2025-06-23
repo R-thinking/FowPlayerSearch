@@ -1,7 +1,7 @@
 {
   "name": "fowcrawler",
   "productName": "fowcrawler",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -11,12 +11,14 @@
     "make:win": "npm run verify-icons && npm run prepare-python-deps && electron-forge make --platform=win32",
     "make:win64": "npm run verify-icons && npm run prepare-python-deps && electron-forge make --platform=win32 --arch=x64",
     "make:win32": "npm run verify-icons && npm run prepare-python-deps && electron-forge make --platform=win32 --arch=ia32",
+    "make:darwin": "npm run cleanup-dmg && npm run prepare-python-deps && electron-forge make --platform=darwin",
     "package:win": "npm run verify-icons && npm run prepare-python-deps && electron-forge package --platform=win32",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
     "verify-icons": "node scripts/verify-icons.js",
     "test-python-deps": "node scripts/test-python-deps.js",
     "prepare-python-deps": "node scripts/prepare-python-deps.js",
+    "cleanup-dmg": "if [ \"$(uname)\" = \"Darwin\" ]; then hdiutil detach /Volumes/FowCrawler 2>/dev/null || true; fi",
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "wait-on http://localhost:3000 && NODE_ENV=development electron .",

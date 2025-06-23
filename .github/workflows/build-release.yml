@@ -51,14 +51,6 @@ jobs:
     - name: Build React app
       run: npm run build
       
-    - name: Cleanup stale DMG volumes (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        echo "Cleaning up any existing DMG volumes..."
-        hdiutil detach /Volumes/FowCrawler 2>/dev/null || true
-        hdiutil detach "/Volumes/FowCrawler" 2>/dev/null || true
-        diskutil list | grep FowCrawler || echo "No FowCrawler volumes found"
-      
     - name: Build Electron app (Windows)
       if: matrix.os == 'windows-latest'
       run: npm run make:win
@@ -66,17 +58,18 @@ jobs:
     - name: Build Electron app (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        echo "Attempting macOS build with DMG..."
-        npm run make || {
-          echo "❌ macOS build with DMG failed, trying without DMG..."
-          echo "Cleaning up any partially created volumes..."
-          hdiutil detach /Volumes/FowCrawler 2>/dev/null || true
-          hdiutil detach "/Volumes/FowCrawler" 2>/dev/null || true
-          
-          echo "Building with ZIP only (no DMG)..."
-          npx electron-forge make --config=forge.config.no-dmg.js
-        }
-      continue-on-error: false
+        # Clean up any existing DMG volumes first
+        hdiutil detach /Volumes/FowCrawler 2>/dev/null || true
+        # Use the new make:darwin command with cleanup
+        npm run make:darwin
+      continue-on-error: true
+      id: macos-build
+      
+    - name: Build Electron app (macOS) - Fallback without DMG
+      if: matrix.os == 'macos-latest' && steps.macos-build.outcome == 'failure'
+      run: |
+        echo "Regular macOS build failed, trying without DMG maker..."
+        npx electron-forge make --config=forge.config.no-dmg.js
       
     # Debug build outputs
     - name: Debug Windows build output

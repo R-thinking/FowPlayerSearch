@@ -46,21 +46,10 @@ module.exports = {
       name: '@electron-forge/maker-dmg',
       platforms: ['darwin'],
       config: {
+        // Minimal configuration to avoid hdiutil issues
         name: 'FowCrawler',
-        title: 'FowCrawler',
-        icon: path.join(__dirname, 'assets', 'icon.icns'),
-        background: null,
-        format: 'UDZO', // Use UDZO format instead of ULFO for better compatibility
         overwrite: true,
-        debug: false, // Disable debug to reduce verbosity
-        additionalDMGOptions: {
-          window: {
-            size: {
-              width: 600,
-              height: 400
-            }
-          }
-        }
+        debug: true
       }
     },
   ],

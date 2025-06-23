@@ -39,9 +39,10 @@ module.exports = {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin', 'win32'],
       config: {
-        // Ensure ZIP is created for both platforms
+        // ZIP only - no DMG to avoid hdiutil issues
       }
     },
+    // DMG maker removed for fallback configuration
   ],
   plugins: [
     // Fuses are used to enable/disable various Electron functionality
