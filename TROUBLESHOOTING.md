@@ -100,6 +100,43 @@ npm run make:win64
 npm run verify-icons
 ```
 
+### 6. Python Dependency Installation Issues
+
+#### Symptoms:
+```
+Installing collected packages: ...
+ERROR: Operation cancelled by user
+```
+
+#### Solutions:
+
+**Solution 1: Test Python Dependencies Locally**
+```bash
+npm run test-python-deps
+```
+This will test if Python dependencies can be installed without actually installing them.
+
+**Solution 2: Skip Python Dependencies**
+The Electron build doesn't require Python dependencies to be pre-installed in CI. The app will install them at runtime. The GitHub Actions workflow now continues even if Python installation fails.
+
+**Solution 3: Check Python Environment**
+```bash
+# Check Python version
+python --version
+
+# Check pip version  
+pip --version
+
+# Test manual installation
+pip install -r requirements.txt --dry-run
+```
+
+**Solution 4: Use Different Python Command**
+Sometimes `python3` works better than `python`:
+```bash
+python3 -m pip install -r requirements.txt
+```
+
 ## Quick Fixes
 
 ### For Immediate Builds (Skip Icons)
