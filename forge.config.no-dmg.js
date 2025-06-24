@@ -13,7 +13,7 @@ module.exports = {
     extraResource: [
       './python_api/dist',
       './python_api/app.py',
-      './src/dist'
+      './frontend-dist'
     ],
     win32metadata: {
       CompanyName: 'r-thinking',

@@ -1,17 +1,17 @@
 {
   "name": "fowcrawler",
   "productName": "fowcrawler",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "npm run prepare-python-exe && electron-forge make",
-    "make:win": "npm run verify-icons && npm run prepare-python-exe && electron-forge make --platform=win32",
-    "make:win64": "npm run verify-icons && npm run prepare-python-exe && electron-forge make --platform=win32 --arch=x64",
-    "make:win32": "npm run verify-icons && npm run prepare-python-exe && electron-forge make --platform=win32 --arch=ia32",
-    "make:darwin": "npm run cleanup-dmg && npm run prepare-python-exe && electron-forge make --platform=darwin",
+    "make": "npm run prepare-frontend && npm run prepare-python-exe && electron-forge make",
+    "make:win": "npm run verify-icons && npm run prepare-frontend && npm run prepare-python-exe && electron-forge make --platform=win32",
+    "make:win64": "npm run verify-icons && npm run prepare-frontend && npm run prepare-python-exe && electron-forge make --platform=win32 --arch=x64",
+    "make:win32": "npm run verify-icons && npm run prepare-frontend && npm run prepare-python-exe && electron-forge make --platform=win32 --arch=ia32",
+    "make:darwin": "npm run cleanup-dmg && npm run prepare-frontend && npm run prepare-python-exe && electron-forge make --platform=darwin",
     "package:win": "npm run verify-icons && npm run prepare-python-exe && electron-forge package --platform=win32",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
@@ -35,7 +35,8 @@
     "dev:fresh": "npm run clear-cache && npm run dev:full",
     "build:python-exe": "cd python_api && python3 build_exe.py",
     "build:python-exe:check": "cd python_api && python3 build_exe.py --check",
-    "prepare-python-exe": "npm run build:python-exe:check && npm run build:python-exe"
+    "prepare-python-exe": "npm run build:python-exe:check && npm run build:python-exe",
+    "prepare-frontend": "npm run build && cp -r src/dist frontend-dist"
   },
   "keywords": [],
   "author": {

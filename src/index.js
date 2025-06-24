@@ -44,9 +44,10 @@ const startPythonAPI = () => {
       
       // Try to find the executable in alternative locations
       const alternativePaths = [
-        path.join(pythonApiPath, executableName),
+        path.join(pythonApiPath, executableName), // Direct in python_api folder
         path.join(resourcesPath, executableName),
         path.join(resourcesPath, 'dist', executableName),
+        path.join(resourcesPath, 'python_api', 'dist', executableName), // Full old path
       ];
       
       let foundPath = null;
@@ -68,6 +69,9 @@ const startPythonAPI = () => {
           }
           if (fs.existsSync(path.join(pythonApiPath, 'dist'))) {
             console.log('python_api/dist contents:', fs.readdirSync(path.join(pythonApiPath, 'dist')));
+          }
+          if (fs.existsSync(resourcesPath)) {
+            console.log('resources contents:', fs.readdirSync(resourcesPath));
           }
         } catch (error) {
           console.error('Error reading directories:', error);
@@ -197,7 +201,8 @@ const createWindow = () => {
     // Try different possible locations for the HTML file
     const possiblePaths = [
       path.join(__dirname, 'dist/index.html'), // Most likely location (src/dist from src/index.js)
-      path.join(process.resourcesPath, 'dist/index.html'), // extraResource location
+      path.join(process.resourcesPath, 'frontend-dist/index.html'), // New extraResource location
+      path.join(process.resourcesPath, 'dist/index.html'), // Old extraResource location
       path.join(__dirname, '../dist/index.html'),
       path.join(process.resourcesPath, 'app/dist/index.html'),
       path.join(__dirname, '../../dist/index.html'),
