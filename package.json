@@ -1,7 +1,7 @@
 {
   "name": "fowcrawler",
   "productName": "fowcrawler",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
