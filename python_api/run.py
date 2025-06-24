@@ -1,29 +1,26 @@
 #!/usr/bin/env python3
 """
-FOW Crawler API Runner with WebSocket Support
-Simple script to start the Flask API server with SocketIO
+FOW Crawler API Runner
+Simple script to start the Flask API server
 """
 
 import os
 import sys
-from app import app, socketio
+from app import app
 
 if __name__ == '__main__':
-    print("🚀 Starting FOW Crawler API with WebSocket support...")
-    print("📡 API will be available at: http://localhost:5002")
-    print("🔍 Health check: http://localhost:5002/api/health")
-    print("📊 Ranking endpoint: http://localhost:5002/api/ranking")
-    print("📈 Multi-page crawling: http://localhost:5002/api/ranking/multi")
-    print("📊 Progress tracking: http://localhost:5002/api/progress")
-    print("🔌 WebSocket events: connect, start_crawl, progress_update, etc.")
-    print("💾 Export endpoint: http://localhost:5002/api/ranking/export")
+    print("[INFO] Starting FOW Crawler API...")
+    print("[INFO] API will be available at: http://localhost:5002")
+    print("[INFO] Health check: http://localhost:5002/api/health")
+    print("[INFO] Ranking endpoint: http://localhost:5002/api/ranking")
+    print("[INFO] Multi-page crawling: http://localhost:5002/api/ranking/multi")
+    print("[INFO] Progress tracking: http://localhost:5002/api/progress")
+    print("[INFO] Export endpoint: http://localhost:5002/api/ranking/export")
     print("\n" + "="*50)
     
-    # Run the SocketIO app (which includes Flask)
-    socketio.run(
-        app,
+    # Run the Flask app
+    app.run(
         debug=True,
         host='0.0.0.0',
-        port=5002,
-        allow_unsafe_werkzeug=True
+        port=5002
     ) 

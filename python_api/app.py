@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -18,7 +17,6 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app, origins="*")  # Enable CORS for Electron app
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,7 +42,6 @@ class ProgressTracker:
         self.start_time = datetime.now()
         self.total_pages = total_pages
         self.is_running = True
-        self.emit_progress()
     
     def update_page(self, page_num, page_data=None, error=None):
         """Update progress for a specific page"""
@@ -53,11 +50,6 @@ class ProgressTracker:
         
         if error:
             self.error_count += 1
-            socketio.emit('status_update', {
-                'message': f'❌ Page {page_num} failed: {error}',
-                'page': page_num,
-                'error': True
-            })
         else:
             if page_data:
                 # Add page number to each record
@@ -71,22 +63,12 @@ class ProgressTracker:
             if self.start_time:
                 elapsed = (datetime.now() - self.start_time).total_seconds()
                 self.page_times.append(elapsed)
-            
-            # Send status update with current page info
-            socketio.emit('status_update', {
-                'message': f'✅ Page {page_num} completed: {len(page_data) if page_data else 0} records',
-                'page': page_num,
-                'error': False
-            })
-        
-        self.emit_progress()
     
     def finish(self):
         self.is_running = False
         self.current_page_data = []
         # When finished, current_page should reflect that we've completed all pages
         self.current_page = self.total_pages if self.completed_pages == self.total_pages else self.current_page
-        self.emit_progress()
     
     def get_eta(self):
         if not self.page_times or self.completed_pages == 0:
@@ -95,34 +77,6 @@ class ProgressTracker:
         avg_time_per_page = sum(self.page_times) / len(self.page_times) / self.completed_pages
         remaining_pages = self.total_pages - self.completed_pages
         return remaining_pages * avg_time_per_page
-    
-    def emit_progress(self):
-        eta_seconds = self.get_eta()
-        eta_formatted = None
-        if eta_seconds:
-            eta_time = datetime.now() + timedelta(seconds=eta_seconds)
-            eta_formatted = eta_time.strftime("%H:%M:%S")
-        
-        elapsed_seconds = 0
-        if self.start_time:
-            elapsed_seconds = (datetime.now() - self.start_time).total_seconds()
-        
-        progress_data = {
-            'total_pages': self.total_pages,
-            'completed_pages': self.completed_pages,
-            'current_page': self.current_page,
-            'remaining_pages': self.total_pages - self.completed_pages,
-            'progress_percent': (self.completed_pages / self.total_pages * 100) if self.total_pages > 0 else 0,
-            'eta_seconds': eta_seconds,
-            'eta_formatted': eta_formatted,
-            'elapsed_seconds': elapsed_seconds,
-            'is_running': self.is_running,
-            'error_count': self.error_count,
-            'total_records': len(self.all_data),
-            'latest_data': self.current_page_data  # Send current page data instead of last N records
-        }
-        
-        socketio.emit('progress_update', progress_data)
 
 # Global progress tracker
 progress_tracker = ProgressTracker()
@@ -482,31 +436,25 @@ class FowCrawler:
                     try:
                         # Update current page BEFORE starting to crawl
                         progress_tracker.current_page = page
-                        progress_tracker.emit_progress()
                         
                         logger.info(f"Starting crawl for page {page}")
-                        socketio.emit('status_update', {'message': f'Crawling page {page}...', 'page': page})
                         
                         result = self.crawl_ranking_data(region=region, page=page)
                         
                         if result and result.get('success'):
                             progress_tracker.update_page(page, result.get('data', []))
-                            socketio.emit('status_update', {'message': f'Page {page} completed - {len(result.get("data", []))} records', 'page': page})
                         else:
                             # Try fallback method if Selenium failed
                             error_msg = result.get('error', 'Unknown error') if result else 'No result returned'
                             logger.warning(f"Selenium failed for page {page}: {error_msg}")
-                            socketio.emit('status_update', {'message': f'Page {page} Selenium failed, trying fallback...', 'page': page})
                             
                             fallback_result = self.crawl_with_requests_fallback(region=region, page=page)
                             
                             if fallback_result and fallback_result.get('success'):
                                 progress_tracker.update_page(page, fallback_result.get('data', []))
-                                socketio.emit('status_update', {'message': f'Page {page} completed via fallback - {len(fallback_result.get("data", []))} records', 'page': page})
                             else:
                                 fallback_error = fallback_result.get('error', 'Fallback also failed') if fallback_result else 'Fallback returned no result'
                                 progress_tracker.update_page(page, error=f"{error_msg} | {fallback_error}")
-                                socketio.emit('status_update', {'message': f'Page {page} failed completely: {fallback_error}', 'page': page, 'error': True})
                         
                         # Delay between pages to avoid rate limiting
                         if page < end_page:
@@ -515,20 +463,12 @@ class FowCrawler:
                     except Exception as e:
                         logger.error(f"Error crawling page {page}: {e}")
                         progress_tracker.update_page(page, error=str(e))
-                        socketio.emit('status_update', {'message': f'Page {page} error: {str(e)}', 'page': page, 'error': True})
                 
                 progress_tracker.finish()
-                socketio.emit('crawl_complete', {
-                    'total_records': len(progress_tracker.all_data),
-                    'total_pages': total_pages,
-                    'completed_pages': progress_tracker.completed_pages,
-                    'error_count': progress_tracker.error_count
-                })
-                
+            
             except Exception as e:
                 logger.error(f"Worker thread error: {e}")
                 progress_tracker.finish()
-                socketio.emit('crawl_error', {'error': str(e)})
         
         # Start crawling in background thread
         thread = threading.Thread(target=crawl_worker)
@@ -539,29 +479,6 @@ class FowCrawler:
 
 # Initialize crawler
 crawler = FowCrawler()
-
-@socketio.on('connect')
-def handle_connect():
-    logger.info('Client connected')
-    emit('connected', {'data': 'Connected to crawler'})
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    logger.info('Client disconnected')
-
-@socketio.on('start_crawl')
-def handle_start_crawl(data):
-    region = data.get('region', 'kr')
-    start_page = data.get('start_page', 1)
-    end_page = data.get('end_page', 5)
-    
-    logger.info(f"Starting crawl: region={region}, pages={start_page}-{end_page}")
-    result = crawler.crawl_multiple_pages_with_progress(region, start_page, end_page)
-    emit('crawl_started', result)
-
-@socketio.on('get_progress')
-def handle_get_progress():
-    progress_tracker.emit_progress()
 
 @app.route('/')
 def home():
@@ -812,4 +729,4 @@ def search_by_winrate():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True) 
+    app.run(host='0.0.0.0', port=5002, debug=True) 
