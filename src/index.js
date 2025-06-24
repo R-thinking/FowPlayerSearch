@@ -1,6 +1,7 @@
-const { app, BrowserWindow, screen } = require('electron');
+const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('node:path');
 const { spawn } = require('child_process');
+const http = require('http');
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -10,130 +11,327 @@ if (require('electron-squirrel-startup')) {
 
 let pythonProcess = null;
 
+// Startup status tracking
+let startupStatus = {
+  stage: 'initializing', // initializing, starting_api, api_ready, error
+  message: 'Initializing application...',
+  timestamp: Date.now(),
+  apiReady: false,
+  error: null
+};
+
+// Track if we're already checking API readiness
+let isCheckingAPI = false;
+
+// Update startup status and notify renderer
+const updateStartupStatus = (stage, message, error = null) => {
+  startupStatus = {
+    stage,
+    message,
+    timestamp: Date.now(),
+    apiReady: stage === 'api_ready',
+    error
+  };
+  
+  console.log(`📊 Startup Status: ${stage} - ${message}`);
+  
+  // Send to all renderer processes
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('startup-status-update', startupStatus);
+  });
+};
+
+// IPC handler for getting current startup status
+ipcMain.handle('get-startup-status', () => {
+  return startupStatus;
+});
+
 const startPythonAPI = () => {
-  if (isDev) {
-    // In development, assume API is started manually
-    console.log('Development mode: Python API should be started manually with "npm run dev:api"');
-    return;
-  }
-
-  try {
-    // In production, use the PyInstaller executable
-    const resourcesPath = process.resourcesPath || path.join(__dirname, '..');
-    const pythonApiPath = path.join(resourcesPath, 'python_api');
-    
-    // Determine executable name based on platform
-    const executableName = process.platform === 'win32' ? 'fowcrawler-api.exe' : 'fowcrawler-api';
-    const executablePath = path.join(pythonApiPath, 'dist', executableName);
-    
-    console.log('=== PyInstaller Executable Startup ===');
-    console.log('Platform:', process.platform);
-    console.log('App packaged:', app.isPackaged);
-    console.log('Resources path:', resourcesPath);
-    console.log('Python API path:', pythonApiPath);
-    console.log('Executable path:', executablePath);
-    
-    // Check if executable exists
-    const fs = require('fs');
-    console.log('Python API directory exists:', fs.existsSync(pythonApiPath));
-    console.log('Executable exists:', fs.existsSync(executablePath));
-    
-    if (!fs.existsSync(executablePath)) {
-      console.error('❌ PyInstaller executable not found!');
-      console.log('Expected location:', executablePath);
-      
-      // Try to find the executable in alternative locations
-      const alternativePaths = [
-        path.join(pythonApiPath, executableName), // Direct in python_api folder
-        path.join(resourcesPath, executableName),
-        path.join(resourcesPath, 'dist', executableName),
-        path.join(resourcesPath, 'python_api', 'dist', executableName), // Full old path
-      ];
-      
-      let foundPath = null;
-      for (const altPath of alternativePaths) {
-        console.log('Checking alternative path:', altPath);
-        if (fs.existsSync(altPath)) {
-          foundPath = altPath;
-          console.log('✅ Found executable at alternative location:', foundPath);
-          break;
-        }
-      }
-      
-      if (!foundPath) {
-        console.error('❌ Could not find PyInstaller executable anywhere!');
-        console.log('Directory contents:');
-        try {
-          if (fs.existsSync(pythonApiPath)) {
-            console.log('python_api contents:', fs.readdirSync(pythonApiPath));
-          }
-          if (fs.existsSync(path.join(pythonApiPath, 'dist'))) {
-            console.log('python_api/dist contents:', fs.readdirSync(path.join(pythonApiPath, 'dist')));
-          }
-          if (fs.existsSync(resourcesPath)) {
-            console.log('resources contents:', fs.readdirSync(resourcesPath));
-          }
-        } catch (error) {
-          console.error('Error reading directories:', error);
-        }
-        return;
-      }
-      
-      // Update executable path to the found location
-      executablePath = foundPath;
+  return new Promise((resolve, reject) => {
+    if (isDev) {
+      // In development, assume API is started manually
+      updateStartupStatus('api_ready', 'Development mode: API should be started manually');
+      console.log('Development mode: Python API should be started manually with "npm run dev:api"');
+      resolve();
+      return;
     }
-    
-    console.log(`🚀 Starting PyInstaller executable: ${executablePath}`);
-    
-    // Start the PyInstaller executable directly
-    pythonProcess = spawn(executablePath, [], {
-      cwd: path.dirname(executablePath),
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env }
-    });
 
-    pythonProcess.stdout.on('data', (data) => {
-      const output = data.toString().trim();
-      console.log(`🐍 API stdout: ${output}`);
+    updateStartupStatus('starting_api', 'Locating PyInstaller executable...');
+
+    try {
+      // In production, use the PyInstaller executable
+      const resourcesPath = process.resourcesPath || path.join(__dirname, '..');
       
-      // Check if server started successfully
-      if (output.includes('Running on') || output.includes('Flask') || output.includes('5002')) {
-        console.log('✅ PyInstaller API server started successfully on port 5002!');
-      }
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      const error = data.toString().trim();
-      console.error(`🐍 API stderr: ${error}`);
-    });
-
-    pythonProcess.on('close', (code) => {
-      console.log(`🐍 PyInstaller API process exited with code ${code}`);
-      pythonProcess = null;
+      // Determine executable name based on platform
+      const executableName = process.platform === 'win32' ? 'fowcrawler-api.exe' : 'fowcrawler-api';
       
-      if (code !== 0) {
-        console.error('❌ PyInstaller API process failed to start or crashed');
-      }
-    });
-
-    pythonProcess.on('error', (error) => {
-      console.error(`🐍 Failed to start PyInstaller executable: ${error.message}`);
-      pythonProcess = null;
+      // The extraResource puts the PyInstaller executable directly in Resources/dist/
+      let executablePath = path.join(resourcesPath, 'dist', executableName);
       
-      // Provide specific error help
-      if (error.code === 'ENOENT') {
-        console.error(`❌ Executable not found: ${executablePath}`);
-      } else if (error.code === 'EACCES') {
-        console.error(`❌ Permission denied for executable: ${executablePath}`);
-        if (process.platform !== 'win32') {
-          console.error('💡 Try: chmod +x ' + executablePath);
+      console.log('=== PyInstaller Executable Startup ===');
+      console.log('Platform:', process.platform);
+      console.log('App packaged:', app.isPackaged);
+      console.log('Resources path:', resourcesPath);
+      console.log('Executable name:', executableName);
+      console.log('Executable path:', executablePath);
+      console.log('NODE_ENV:', process.env.NODE_ENV);
+      console.log('Process argv:', process.argv);
+      
+      // Check if executable exists
+      const fs = require('fs');
+      console.log('Resources directory exists:', fs.existsSync(resourcesPath));
+      console.log('Dist directory exists:', fs.existsSync(path.join(resourcesPath, 'dist')));
+      console.log('Executable exists:', fs.existsSync(executablePath));
+      
+      // Windows-specific debugging
+      if (process.platform === 'win32') {
+        console.log('=== Windows-specific debugging ===');
+        console.log('__dirname:', __dirname);
+        console.log('process.cwd():', process.cwd());
+        console.log('app.getAppPath():', app.getAppPath());
+        
+        // Check for Windows-specific paths
+        const winPaths = [
+          path.join(resourcesPath, 'app.asar.unpacked', 'dist', executableName),
+          path.join(resourcesPath, 'extraResources', 'dist', executableName),
+          path.join(__dirname, '..', 'dist', executableName),
+        ];
+        
+        for (const winPath of winPaths) {
+          console.log(`Windows path check: ${winPath} exists: ${fs.existsSync(winPath)}`);
         }
       }
-    });
+      
+      if (!fs.existsSync(executablePath)) {
+        updateStartupStatus('starting_api', 'Searching for executable in alternative locations...');
+        console.error('❌ PyInstaller executable not found!');
+        console.log('Expected location:', executablePath);
+        
+        // Try to find the executable in alternative locations
+        const alternativePaths = [
+          path.join(resourcesPath, executableName), // Direct in resources
+          path.join(resourcesPath, 'python_api', 'dist', executableName), // Old structure
+          path.join(resourcesPath, 'app.asar.unpacked', 'dist', executableName), // If somehow in asar
+          path.join(resourcesPath, 'extraResources', 'dist', executableName), // Alternative extraResource location
+          path.join(__dirname, '..', 'dist', executableName), // Relative to main process
+        ];
+        
+        let foundPath = null;
+        for (const altPath of alternativePaths) {
+          console.log('Checking alternative path:', altPath);
+          if (fs.existsSync(altPath)) {
+            foundPath = altPath;
+            console.log('✅ Found executable at alternative location:', foundPath);
+            break;
+          }
+        }
+        
+        if (!foundPath) {
+          const errorMsg = 'PyInstaller executable not found in any expected location';
+          updateStartupStatus('error', errorMsg, 'EXECUTABLE_NOT_FOUND');
+          console.error('❌ Could not find PyInstaller executable anywhere!');
+          console.log('=== Directory structure debugging ===');
+          try {
+            if (fs.existsSync(resourcesPath)) {
+              const resourcesContents = fs.readdirSync(resourcesPath);
+              console.log('resources contents:', resourcesContents);
+              
+              // Check each subdirectory
+              for (const item of resourcesContents) {
+                const itemPath = path.join(resourcesPath, item);
+                const stat = fs.statSync(itemPath);
+                if (stat.isDirectory()) {
+                  console.log(`${item}/ contents:`, fs.readdirSync(itemPath));
+                }
+              }
+            }
+            
+            if (fs.existsSync(path.join(resourcesPath, 'dist'))) {
+              console.log('resources/dist contents:', fs.readdirSync(path.join(resourcesPath, 'dist')));
+            }
+          } catch (error) {
+            console.error('Error reading directories:', error);
+          }
+          reject(new Error('PyInstaller executable not found'));
+          return;
+        }
+        
+        // Update executable path to the found location
+        executablePath = foundPath;
+      }
+      
+      updateStartupStatus('starting_api', 'Starting PyInstaller API server...');
+      console.log(`🚀 Starting PyInstaller executable: ${executablePath}`);
+      
+      // Windows-specific spawn options
+      const spawnOptions = {
+        cwd: path.dirname(executablePath),
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env },
+        shell: process.platform === 'win32', // Use shell on Windows for better compatibility
+      };
+      
+      // On Windows, also try without shell if the first attempt fails
+      console.log('Spawn options:', spawnOptions);
+      
+      // Start the PyInstaller executable directly
+      pythonProcess = spawn(executablePath, [], spawnOptions);
 
-  } catch (error) {
-    console.error('❌ Error in startPythonAPI:', error);
-  }
+      // Function to check if API is ready
+      const checkAPIReady = async () => {
+        return new Promise((resolve) => {
+          const req = http.request({
+            hostname: 'localhost',
+            port: 5002,
+            path: '/api/health',
+            method: 'GET',
+            timeout: 2000,
+          }, (res) => {
+            resolve(res.statusCode === 200);
+          });
+          
+          req.on('error', () => {
+            resolve(false);
+          });
+          
+          req.on('timeout', () => {
+            resolve(false);
+          });
+          
+          req.end();
+        });
+      };
+
+      // Wait for API to be ready with timeout
+      const waitForAPI = async () => {
+        // Prevent multiple concurrent API checks
+        if (isCheckingAPI) {
+          console.log('🔄 API check already in progress, skipping...');
+          return;
+        }
+        
+        isCheckingAPI = true;
+        const maxWaitTime = 60000; // 60 seconds max wait
+        const checkInterval = 1000; // Check every 1 second
+        const startTime = Date.now();
+        
+        updateStartupStatus('starting_api', 'Waiting for API server to initialize...');
+        console.log('⏳ Waiting for PyInstaller API to be ready...');
+        
+        while (Date.now() - startTime < maxWaitTime) {
+          if (await checkAPIReady()) {
+            updateStartupStatus('api_ready', 'API server is ready and responding');
+            console.log('✅ PyInstaller API is ready!');
+            isCheckingAPI = false;
+            resolve();
+            return;
+          }
+          
+          // Update status with elapsed time
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          updateStartupStatus('starting_api', `Initializing API server... (${elapsed}s)`);
+          
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+        
+        const errorMsg = 'Timeout waiting for API server to start (60s)';
+        updateStartupStatus('error', errorMsg, 'API_TIMEOUT');
+        console.error('❌ Timeout waiting for PyInstaller API to start');
+        isCheckingAPI = false;
+        reject(new Error('API startup timeout'));
+      };
+
+      pythonProcess.stdout.on('data', (data) => {
+        const output = data.toString().trim();
+        console.log(`🐍 API stdout: ${output}`);
+        
+        // Check if server started successfully and we're not already checking
+        if ((output.includes('Running on') || output.includes('Flask') || output.includes('5002')) && !isCheckingAPI) {
+          updateStartupStatus('starting_api', 'API server started, checking connectivity...');
+          console.log('✅ PyInstaller API server started successfully on port 5002!');
+          // Start checking API readiness when we see startup messages
+          setTimeout(waitForAPI, 1000);
+        }
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        const error = data.toString().trim();
+        console.error(`🐍 API stderr: ${error}`);
+        
+        // Update status with error info
+        if (error.includes('Error') || error.includes('Failed') || error.includes('Exception')) {
+          updateStartupStatus('starting_api', `API startup warning: ${error.substring(0, 100)}...`);
+        }
+      });
+
+      pythonProcess.on('close', (code) => {
+        console.log(`🐍 PyInstaller API process exited with code ${code}`);
+        pythonProcess = null;
+        isCheckingAPI = false; // Reset checking flag
+        
+        if (code !== 0) {
+          const errorMsg = `API process exited unexpectedly (code: ${code})`;
+          updateStartupStatus('error', errorMsg, 'PROCESS_EXIT');
+          console.error('❌ PyInstaller API process failed to start or crashed');
+          reject(new Error(`PyInstaller process exited with code ${code}`));
+          
+          // On Windows, try alternative spawn method if the first failed
+          if (process.platform === 'win32' && !spawnOptions.shell) {
+            console.log('🔄 Retrying with shell=true on Windows...');
+            setTimeout(() => {
+              startPythonAPI().then(resolve).catch(reject);
+            }, 1000);
+          }
+        }
+      });
+
+      pythonProcess.on('error', (error) => {
+        console.error(`🐍 Failed to start PyInstaller executable: ${error.message}`);
+        console.error('Error details:', error);
+        pythonProcess = null;
+        isCheckingAPI = false; // Reset checking flag
+        
+        // Provide specific error help
+        let errorMsg = `Failed to start API: ${error.message}`;
+        let errorCode = 'SPAWN_ERROR';
+        
+        if (error.code === 'ENOENT') {
+          errorMsg = 'API executable not found';
+          errorCode = 'EXECUTABLE_NOT_FOUND';
+          console.error(`❌ Executable not found: ${executablePath}`);
+        } else if (error.code === 'EACCES') {
+          errorMsg = 'Permission denied for API executable';
+          errorCode = 'PERMISSION_DENIED';
+          console.error(`❌ Permission denied for executable: ${executablePath}`);
+          if (process.platform !== 'win32') {
+            console.error('💡 Try: chmod +x ' + executablePath);
+          }
+        } else if (error.code === 'EBUSY') {
+          errorMsg = 'API executable is busy or locked';
+          errorCode = 'EXECUTABLE_BUSY';
+          console.error(`❌ Executable is busy or locked: ${executablePath}`);
+        }
+        
+        updateStartupStatus('error', errorMsg, errorCode);
+        reject(error);
+        
+        // On Windows, try alternative spawn method if the first failed
+        if (process.platform === 'win32' && spawnOptions.shell) {
+          console.log('🔄 Retrying without shell on Windows...');
+          setTimeout(() => {
+            spawnOptions.shell = false;
+            pythonProcess = spawn(executablePath, [], spawnOptions);
+          }, 1000);
+        }
+      });
+
+    } catch (error) {
+      const errorMsg = `Unexpected error during API startup: ${error.message}`;
+      updateStartupStatus('error', errorMsg, 'UNEXPECTED_ERROR');
+      console.error('❌ Error in startPythonAPI:', error);
+      reject(error);
+    }
+  });
 };
 
 const stopPythonAPI = () => {
@@ -264,9 +462,12 @@ app.whenReady().then(() => {
     app.commandLine.appendSwitch('--disable-web-security');
   }
   
-  // Start Python API server
-  startPythonAPI();
+  // Start Python API server (don't wait for it)
+  startPythonAPI().catch((error) => {
+    console.error('❌ Error starting Python API:', error);
+  });
   
+  // Create window immediately to show startup progress
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the
