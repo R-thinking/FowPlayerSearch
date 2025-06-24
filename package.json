@@ -1,18 +1,18 @@
 {
   "name": "fowcrawler",
   "productName": "fowcrawler",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "npm run prepare-python-deps && electron-forge make",
-    "make:win": "npm run verify-icons && npm run prepare-python-deps && electron-forge make --platform=win32",
-    "make:win64": "npm run verify-icons && npm run prepare-python-deps && electron-forge make --platform=win32 --arch=x64",
-    "make:win32": "npm run verify-icons && npm run prepare-python-deps && electron-forge make --platform=win32 --arch=ia32",
-    "make:darwin": "npm run cleanup-dmg && npm run prepare-python-deps && electron-forge make --platform=darwin",
-    "package:win": "npm run verify-icons && npm run prepare-python-deps && electron-forge package --platform=win32",
+    "make": "npm run prepare-python-exe && electron-forge make",
+    "make:win": "npm run verify-icons && npm run prepare-python-exe && electron-forge make --platform=win32",
+    "make:win64": "npm run verify-icons && npm run prepare-python-exe && electron-forge make --platform=win32 --arch=x64",
+    "make:win32": "npm run verify-icons && npm run prepare-python-exe && electron-forge make --platform=win32 --arch=ia32",
+    "make:darwin": "npm run cleanup-dmg && npm run prepare-python-exe && electron-forge make --platform=darwin",
+    "package:win": "npm run verify-icons && npm run prepare-python-exe && electron-forge package --platform=win32",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
     "verify-icons": "node scripts/verify-icons.js",
@@ -32,7 +32,10 @@
     "preview": "vite preview",
     "setup:python": "cd python_api && python3 -m pip install -r ../requirements.txt --user",
     "clear-cache": "rm -rf node_modules/.cache && rm -rf dist",
-    "dev:fresh": "npm run clear-cache && npm run dev:full"
+    "dev:fresh": "npm run clear-cache && npm run dev:full",
+    "build:python-exe": "cd python_api && python3 build_exe.py",
+    "build:python-exe:check": "cd python_api && python3 build_exe.py --check",
+    "prepare-python-exe": "npm run build:python-exe:check && npm run build:python-exe"
   },
   "keywords": [],
   "author": {

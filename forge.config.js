@@ -11,8 +11,8 @@ module.exports = {
     icon: path.join(__dirname, 'assets', 'icon'), // More robust path handling
     appBundleId: 'com.rthinking.fowcrawler',
     extraResource: [
-      './python_api',
-      './requirements.txt',
+      './python_api/dist',
+      './python_api/app.py',
       './src/dist'
     ],
     win32metadata: {
