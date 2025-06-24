@@ -27,9 +27,9 @@ def build_api_executable():
     if build_dir.exists():
         shutil.rmtree(build_dir)
     
-    print(f"🔨 Building FowCrawler API executable...")
-    print(f"📁 Script directory: {script_dir}")
-    print(f"🐍 Python script: {api_script}")
+    print(f"[BUILD] Building FowCrawler API executable...")
+    print(f"[INFO] Script directory: {script_dir}")
+    print(f"[INFO] Python script: {api_script}")
     
     # PyInstaller arguments
     pyinstaller_args = [
@@ -64,7 +64,7 @@ def build_api_executable():
             "--icon=../assets/icon.icns",  # macOS icon
         ])
     
-    print(f"🚀 Running PyInstaller with args: {' '.join(pyinstaller_args)}")
+    print(f"[INFO] Running PyInstaller with args: {' '.join(pyinstaller_args)}")
     
     try:
         # Run PyInstaller
@@ -77,16 +77,16 @@ def build_api_executable():
             exe_path = dist_dir / "fowcrawler-api"
             
         if exe_path.exists():
-            print(f"✅ Build successful!")
-            print(f"📦 Executable created: {exe_path}")
-            print(f"📏 File size: {exe_path.stat().st_size / (1024*1024):.1f} MB")
+            print(f"[SUCCESS] Build successful!")
+            print(f"[INFO] Executable created: {exe_path}")
+            print(f"[INFO] File size: {exe_path.stat().st_size / (1024*1024):.1f} MB")
             return str(exe_path)
         else:
-            print(f"❌ Build failed - executable not found at {exe_path}")
+            print(f"[ERROR] Build failed - executable not found at {exe_path}")
             return None
             
     except Exception as e:
-        print(f"❌ Build failed with error: {e}")
+        print(f"[ERROR] Build failed with error: {e}")
         return None
 
 if __name__ == "__main__":
@@ -94,16 +94,16 @@ if __name__ == "__main__":
         # Check if PyInstaller is available
         try:
             import PyInstaller
-            print("✅ PyInstaller is available")
-            print(f"📦 PyInstaller version: {PyInstaller.__version__}")
+            print("[SUCCESS] PyInstaller is available")
+            print(f"[INFO] PyInstaller version: {PyInstaller.__version__}")
         except ImportError:
-            print("❌ PyInstaller not found. Install with: pip install pyinstaller")
+            print("[ERROR] PyInstaller not found. Install with: pip install pyinstaller")
             sys.exit(1)
     else:
         # Build the executable
         result = build_api_executable()
         if result:
-            print(f"\n🎉 Success! Executable ready at: {result}")
+            print(f"\n[SUCCESS] Success! Executable ready at: {result}")
         else:
-            print(f"\n💥 Build failed!")
+            print(f"\n[ERROR] Build failed!")
             sys.exit(1) 
