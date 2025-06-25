@@ -15,6 +15,7 @@ permissions:
   contents: write
   actions: read
   checks: write
+  pull-requests: write
 
 jobs:
   build:
@@ -179,151 +180,133 @@ jobs:
           fi
         done
         
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.event.inputs.version || github.ref_name }}
-        release_name: FowCrawler ${{ github.event.inputs.version || github.ref_name }}
-        body: |
-          ## FowCrawler Release ${{ github.event.inputs.version || github.ref_name }}
-          
-          ### Downloads
-          - **Windows**: Download `FowCrawler-Setup.exe` for easy installation
-          - **macOS**: Download the `.zip` file and extract
-          
-          ### 📋 Installation Guides
-          - **Windows Users**: See [Windows Installation Guide](https://github.com/${{ github.repository }}/blob/main/WINDOWS_INSTALL_GUIDE.md)
-          - **macOS Users**: See [macOS Installation Guide](https://github.com/${{ github.repository }}/blob/main/MACOS_INSTALL_GUIDE.md)
-          
-          ### 🚨 Common Issues & Solutions
-          
-          **macOS "App is damaged" error**: 
-          - Right-click the app → "Open" → "Open" in security dialog
-          - See full guide: [macOS Installation Guide](https://github.com/${{ github.repository }}/blob/main/MACOS_INSTALL_GUIDE.md)
-          
-          **Windows blank screen/nothing shows**: 
-          - Install Python 3.8+ from python.org
-          - Dependencies are now included automatically!
-          - See full guide: [Windows Installation Guide](https://github.com/${{ github.repository }}/blob/main/WINDOWS_INSTALL_GUIDE.md)
-          
-          ### Features
-          - League of Legends player ranking search
-          - Filter by winrate and rank range
-          - Export results to CSV
-          - Real-time progress tracking
-          - Automatic Python API integration
-          
-          ### System Requirements
-          - **Windows**: Windows 10 or later + Python 3.8+
-          - **macOS**: macOS 10.15 or later + Python 3.8+
-          - **Memory**: 4GB RAM minimum
-          - **Storage**: 500MB-1GB free space
-          
-          ### First Time Setup
-          1. **Install Python** 3.8+ from [python.org](https://www.python.org/downloads/)
-          2. **Dependencies included** - No manual package installation needed!
-          3. **Follow platform-specific installation guide** (links above)
-          4. **Launch the app** - first startup may take 30-60 seconds
-          
-          ### 🔒 Security Note
-          This app is not code-signed (requires $99/year Apple Developer certificate). Security warnings are normal and can be safely bypassed using the installation guides above.
-          
-          For detailed instructions and troubleshooting, see the installation guides linked above.
-        draft: false
-        prerelease: false
-        
-    # Find and upload Windows files
-    - name: Find Windows files
-      id: find-windows
+    - name: Find and prepare release files
+      id: prepare-files
       run: |
-        echo "Looking for Windows files..."
-        ARTIFACT_DIR="artifacts/FowCrawler-Windows-${{ steps.package-version.outputs.version }}"
-        SETUP_EXE=$(find "${ARTIFACT_DIR}" -name "*Setup*.exe" -o -name "*setup*.exe" -o -name "*.exe" 2>/dev/null | head -1)
-        WIN_ZIP=$(find "${ARTIFACT_DIR}" -name "*.zip" 2>/dev/null | head -1)
+        echo "Looking for release files..."
         
-        echo "setup_exe=${SETUP_EXE}" >> $GITHUB_OUTPUT
-        echo "win_zip=${WIN_ZIP}" >> $GITHUB_OUTPUT
+        # Find Windows files
+        ARTIFACT_DIR_WIN="artifacts/FowCrawler-Windows-${{ steps.package-version.outputs.version }}"
+        SETUP_EXE=$(find "${ARTIFACT_DIR_WIN}" -name "*Setup*.exe" -o -name "*setup*.exe" -o -name "*.exe" 2>/dev/null | head -1)
+        WIN_ZIP=$(find "${ARTIFACT_DIR_WIN}" -name "*.zip" 2>/dev/null | head -1)
         
-        echo "Found setup exe: ${SETUP_EXE}"
-        echo "Found win zip: ${WIN_ZIP}"
-        
-    - name: Find macOS files
-      id: find-macos
-      run: |
-        echo "Looking for macOS files..."
-        ARTIFACT_DIR="artifacts/FowCrawler-macOS-${{ steps.package-version.outputs.version }}"
-        
-        # Search for ZIP files in versioned artifact directory
-        MACOS_ZIP=$(find "${ARTIFACT_DIR}" -name "*.zip" 2>/dev/null | head -1)
+        # Find macOS files
+        ARTIFACT_DIR_MAC="artifacts/FowCrawler-macOS-${{ steps.package-version.outputs.version }}"
+        MACOS_ZIP=$(find "${ARTIFACT_DIR_MAC}" -name "*.zip" 2>/dev/null | head -1)
         if [ -z "$MACOS_ZIP" ]; then
-          echo "No ZIP found in ${ARTIFACT_DIR}, searching more broadly..."
           MACOS_ZIP=$(find artifacts -name "*darwin*.zip" -o -name "*macOS*.zip" -o -name "*mac*.zip" 2>/dev/null | head -1)
         fi
-        
-        # Search for DMG files
-        MACOS_DMG=$(find "${ARTIFACT_DIR}" -name "*.dmg" 2>/dev/null | head -1)
+        MACOS_DMG=$(find "${ARTIFACT_DIR_MAC}" -name "*.dmg" 2>/dev/null | head -1)
         if [ -z "$MACOS_DMG" ]; then
-          echo "No DMG found in ${ARTIFACT_DIR}, searching more broadly..."
           MACOS_DMG=$(find artifacts -name "*.dmg" 2>/dev/null | head -1)
         fi
         
+        # Output findings
+        echo "setup_exe=${SETUP_EXE}" >> $GITHUB_OUTPUT
+        echo "win_zip=${WIN_ZIP}" >> $GITHUB_OUTPUT
         echo "macos_zip=${MACOS_ZIP}" >> $GITHUB_OUTPUT
         echo "macos_dmg=${MACOS_DMG}" >> $GITHUB_OUTPUT
         
+        echo "Found Windows setup: ${SETUP_EXE}"
+        echo "Found Windows zip: ${WIN_ZIP}"
         echo "Found macOS zip: ${MACOS_ZIP}"
         echo "Found macOS dmg: ${MACOS_DMG}"
         
-        # If no files found, show what we do have
-        if [ -z "$MACOS_ZIP" ] && [ -z "$MACOS_DMG" ]; then
-          echo "⚠️ No macOS files found! Available files:"
-          find artifacts -type f 2>/dev/null || echo "No artifacts found at all"
+        # Prepare release files list
+        RELEASE_FILES=""
+        if [ -n "$SETUP_EXE" ]; then
+          cp "$SETUP_EXE" "FowCrawler-Windows-${{ steps.package-version.outputs.version }}-Setup.exe"
+          RELEASE_FILES="$RELEASE_FILES FowCrawler-Windows-${{ steps.package-version.outputs.version }}-Setup.exe"
+        fi
+        if [ -n "$WIN_ZIP" ]; then
+          cp "$WIN_ZIP" "FowCrawler-Windows-${{ steps.package-version.outputs.version }}.zip"
+          RELEASE_FILES="$RELEASE_FILES FowCrawler-Windows-${{ steps.package-version.outputs.version }}.zip"
+        fi
+        if [ -n "$MACOS_ZIP" ]; then
+          cp "$MACOS_ZIP" "FowCrawler-macOS-${{ steps.package-version.outputs.version }}.zip"
+          RELEASE_FILES="$RELEASE_FILES FowCrawler-macOS-${{ steps.package-version.outputs.version }}.zip"
+        fi
+        if [ -n "$MACOS_DMG" ]; then
+          cp "$MACOS_DMG" "FowCrawler-macOS-${{ steps.package-version.outputs.version }}.dmg"
+          RELEASE_FILES="$RELEASE_FILES FowCrawler-macOS-${{ steps.package-version.outputs.version }}.dmg"
         fi
         
-    # Upload Windows files
-    - name: Upload Windows Installer
-      if: steps.find-windows.outputs.setup_exe != ''
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.find-windows.outputs.setup_exe }}
-        asset_name: FowCrawler-Windows-${{ steps.package-version.outputs.version }}-Setup.exe
-        asset_content_type: application/octet-stream
+        echo "release_files=${RELEASE_FILES}" >> $GITHUB_OUTPUT
+        echo "Release files prepared: ${RELEASE_FILES}"
         
-    - name: Upload Windows ZIP
-      if: steps.find-windows.outputs.win_zip != ''
-      uses: actions/upload-release-asset@v1
+    - name: Create Release with GitHub CLI
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.find-windows.outputs.win_zip }}
-        asset_name: FowCrawler-Windows-${{ steps.package-version.outputs.version }}.zip
-        asset_content_type: application/zip
+      run: |
+        TAG_NAME="${{ github.event.inputs.version || github.ref_name }}"
+        RELEASE_TITLE="FowCrawler ${TAG_NAME}"
         
-    # Upload macOS files
-    - name: Upload macOS ZIP
-      if: steps.find-macos.outputs.macos_zip != ''
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.find-macos.outputs.macos_zip }}
-        asset_name: FowCrawler-macOS-${{ steps.package-version.outputs.version }}.zip
-        asset_content_type: application/zip
+        # Create release notes
+        cat > release_notes.md << 'EOF'
+        ## FowCrawler Release ${{ github.event.inputs.version || github.ref_name }}
         
-    - name: Upload macOS DMG
-      if: steps.find-macos.outputs.macos_dmg != ''
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.find-macos.outputs.macos_dmg }}
-        asset_name: FowCrawler-macOS-${{ steps.package-version.outputs.version }}.dmg
-        asset_content_type: application/octet-stream 
+        ### Downloads
+        - **Windows**: Download `FowCrawler-Setup.exe` for easy installation
+        - **macOS**: Download the `.zip` file and extract
+        
+        ### 📋 Installation Guides
+        - **Windows Users**: See [Windows Installation Guide](https://github.com/${{ github.repository }}/blob/main/WINDOWS_INSTALL_GUIDE.md)
+        - **macOS Users**: See [macOS Installation Guide](https://github.com/${{ github.repository }}/blob/main/MACOS_INSTALL_GUIDE.md)
+        
+        ### 🚨 Common Issues & Solutions
+        
+        **macOS "App is damaged" error**: 
+        - Right-click the app → "Open" → "Open" in security dialog
+        - See full guide: [macOS Installation Guide](https://github.com/${{ github.repository }}/blob/main/MACOS_INSTALL_GUIDE.md)
+        
+        **Windows blank screen/nothing shows**: 
+        - Install Python 3.8+ from python.org
+        - Dependencies are now included automatically!
+        - See full guide: [Windows Installation Guide](https://github.com/${{ github.repository }}/blob/main/WINDOWS_INSTALL_GUIDE.md)
+        
+        ### Features
+        - League of Legends player ranking search
+        - Filter by winrate and rank range
+        - Export results to CSV
+        - Real-time progress tracking
+        - Automatic Python API integration
+        
+        ### System Requirements
+        - **Windows**: Windows 10 or later + Python 3.8+
+        - **macOS**: macOS 10.15 or later + Python 3.8+
+        - **Memory**: 4GB RAM minimum
+        - **Storage**: 500MB-1GB free space
+        
+        ### First Time Setup
+        1. **Install Python** 3.8+ from [python.org](https://www.python.org/downloads/)
+        2. **Dependencies included** - No manual package installation needed!
+        3. **Follow platform-specific installation guide** (links above)
+        4. **Launch the app** - first startup may take 30-60 seconds
+        
+        ### 🔒 Security Note
+        This app is not code-signed (requires $99/year Apple Developer certificate). Security warnings are normal and can be safely bypassed using the installation guides above.
+        
+        For detailed instructions and troubleshooting, see the installation guides linked above.
+        EOF
+        
+        # Create the release
+        echo "Creating release ${TAG_NAME}..."
+        RELEASE_FILES="${{ steps.prepare-files.outputs.release_files }}"
+        
+        if [ -n "$RELEASE_FILES" ]; then
+          gh release create "${TAG_NAME}" \
+            --title "${RELEASE_TITLE}" \
+            --notes-file release_notes.md \
+            --draft=false \
+            --prerelease=false \
+            $RELEASE_FILES
+        else
+          echo "No release files found, creating release without assets"
+          gh release create "${TAG_NAME}" \
+            --title "${RELEASE_TITLE}" \
+            --notes-file release_notes.md \
+            --draft=false \
+            --prerelease=false
+        fi
+        
+        echo "Release created successfully!" 
