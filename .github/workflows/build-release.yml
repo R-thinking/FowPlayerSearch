@@ -29,6 +29,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Get version from package.json
+      id: package-version
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          VERSION=$(cat package.json | grep '"version"' | cut -d'"' -f4)
+        else
+          VERSION=$(node -p "require('./package.json').version")
+        fi
+        echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: v${VERSION}"
+      shell: bash
+      
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -111,7 +123,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: FowCrawler-Windows
+        name: FowCrawler-Windows-${{ steps.package-version.outputs.version }}
         path: |
           out/make/squirrel.windows/x64/*.exe
           out/make/squirrel.windows/x64/*.nupkg
@@ -123,7 +135,7 @@ jobs:
       if: matrix.os == 'macos-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: FowCrawler-macOS
+        name: FowCrawler-macOS-${{ steps.package-version.outputs.version }}
         path: |
           out/make/zip/darwin/**/*.zip
           out/make/*.dmg
@@ -138,6 +150,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Get version from package.json
+      id: package-version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: v${VERSION}"
       
     - name: Download all artifacts
       uses: actions/download-artifact@v4
@@ -221,8 +240,9 @@ jobs:
       id: find-windows
       run: |
         echo "Looking for Windows files..."
-        SETUP_EXE=$(find artifacts/FowCrawler-Windows -name "*Setup*.exe" -o -name "*setup*.exe" -o -name "*.exe" | head -1)
-        WIN_ZIP=$(find artifacts/FowCrawler-Windows -name "*.zip" | head -1)
+        ARTIFACT_DIR="artifacts/FowCrawler-Windows-${{ steps.package-version.outputs.version }}"
+        SETUP_EXE=$(find "${ARTIFACT_DIR}" -name "*Setup*.exe" -o -name "*setup*.exe" -o -name "*.exe" 2>/dev/null | head -1)
+        WIN_ZIP=$(find "${ARTIFACT_DIR}" -name "*.zip" 2>/dev/null | head -1)
         
         echo "setup_exe=${SETUP_EXE}" >> $GITHUB_OUTPUT
         echo "win_zip=${WIN_ZIP}" >> $GITHUB_OUTPUT
@@ -234,18 +254,19 @@ jobs:
       id: find-macos
       run: |
         echo "Looking for macOS files..."
+        ARTIFACT_DIR="artifacts/FowCrawler-macOS-${{ steps.package-version.outputs.version }}"
         
-        # Search for ZIP files in various possible locations
-        MACOS_ZIP=$(find artifacts/FowCrawler-macOS -name "*.zip" 2>/dev/null | head -1)
+        # Search for ZIP files in versioned artifact directory
+        MACOS_ZIP=$(find "${ARTIFACT_DIR}" -name "*.zip" 2>/dev/null | head -1)
         if [ -z "$MACOS_ZIP" ]; then
-          echo "No ZIP found in FowCrawler-macOS, searching more broadly..."
+          echo "No ZIP found in ${ARTIFACT_DIR}, searching more broadly..."
           MACOS_ZIP=$(find artifacts -name "*darwin*.zip" -o -name "*macOS*.zip" -o -name "*mac*.zip" 2>/dev/null | head -1)
         fi
         
         # Search for DMG files
-        MACOS_DMG=$(find artifacts/FowCrawler-macOS -name "*.dmg" 2>/dev/null | head -1)
+        MACOS_DMG=$(find "${ARTIFACT_DIR}" -name "*.dmg" 2>/dev/null | head -1)
         if [ -z "$MACOS_DMG" ]; then
-          echo "No DMG found in FowCrawler-macOS, searching more broadly..."
+          echo "No DMG found in ${ARTIFACT_DIR}, searching more broadly..."
           MACOS_DMG=$(find artifacts -name "*.dmg" 2>/dev/null | head -1)
         fi
         
@@ -270,7 +291,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ steps.find-windows.outputs.setup_exe }}
-        asset_name: FowCrawler-Setup.exe
+        asset_name: FowCrawler-Windows-${{ steps.package-version.outputs.version }}-Setup.exe
         asset_content_type: application/octet-stream
         
     - name: Upload Windows ZIP
@@ -281,7 +302,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ steps.find-windows.outputs.win_zip }}
-        asset_name: FowCrawler-Windows.zip
+        asset_name: FowCrawler-Windows-${{ steps.package-version.outputs.version }}.zip
         asset_content_type: application/zip
         
     # Upload macOS files
@@ -293,7 +314,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ steps.find-macos.outputs.macos_zip }}
-        asset_name: FowCrawler-macOS.zip
+        asset_name: FowCrawler-macOS-${{ steps.package-version.outputs.version }}.zip
         asset_content_type: application/zip
         
     - name: Upload macOS DMG
@@ -304,5 +325,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ steps.find-macos.outputs.macos_dmg }}
-        asset_name: FowCrawler-macOS.dmg
+        asset_name: FowCrawler-macOS-${{ steps.package-version.outputs.version }}.dmg
         asset_content_type: application/octet-stream 

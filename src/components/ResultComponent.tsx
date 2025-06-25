@@ -43,6 +43,13 @@ const generateProfileLink = (playerName: string, region: string = 'kr'): string 
   }
 };
 
+// Helper function to open player profile in sized window
+const openPlayerProfile = (playerName: string, region: string = 'kr') => {
+  const url = generateProfileLink(playerName, region);
+  const windowFeatures = 'width=1040,height=800,scrollbars=yes,resizable=yes,location=yes,menubar=no,toolbar=no,status=no';
+  window.open(url, '_blank', windowFeatures);
+};
+
 // Styled Components
 const ResultContainer = styled.div`
   background-color: white;
@@ -137,7 +144,7 @@ const PlayerNameCell = styled(TableCell)`
   white-space: nowrap;
 `;
 
-const PlayerLink = styled.a`
+const PlayerLink = styled.span`
   color: #3498db;
   text-decoration: none;
   font-weight: 600;
@@ -147,10 +154,6 @@ const PlayerLink = styled.a`
   &:hover {
     color: #2980b9;
     text-decoration: underline;
-  }
-
-  &:visited {
-    color: #8e44ad;
   }
 `;
 
@@ -282,7 +285,7 @@ const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = fal
               <TableRow key={index}>
                 <RankCell>{player.순위}</RankCell>
                 <PlayerNameCell title={player['플레이어 이름']}>
-                  <PlayerLink href={generateProfileLink(player['플레이어 이름'], region)} target="_blank">
+                  <PlayerLink onClick={() => openPlayerProfile(player['플레이어 이름'], region)}>
                     {player['플레이어 이름']}
                   </PlayerLink>
                 </PlayerNameCell>
