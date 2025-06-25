@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useLocale } from '../locales/LocaleContext';
 
 interface RankingData {
   순위: string;
@@ -368,6 +369,8 @@ const HelpText = styled.div`
 `;
 
 const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onError, onSearchStart, onSearchStop, onRegionChange }) => {
+  const { t, tn } = useLocale();
+  
   // Search mode
   const [searchMode, setSearchMode] = useState<'page' | 'rank'>('page');
   
@@ -415,12 +418,12 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
   }, [isLoading, searchStartTime]);
 
   const regions = [
-    { value: 'kr', label: 'Korea' },
-    { value: 'na', label: 'North America' },
-    { value: 'euw', label: 'Europe West' },
-    { value: 'eun', label: 'Europe Nordic & East' },
-    { value: 'jp', label: 'Japan' },
-    { value: 'oce', label: 'Oceania' }
+    { value: 'kr', label: tn('regions.kr') },
+    { value: 'na', label: tn('regions.na') },
+    { value: 'euw', label: tn('regions.euw') },
+    { value: 'eun', label: tn('regions.eun') },
+    { value: 'jp', label: tn('regions.jp') },
+    { value: 'oce', label: tn('regions.oce') }
   ];
 
   // Helper function to calculate pages from rank range
@@ -444,11 +447,11 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
 
     if (searchMode === 'rank') {
       if (startRank > endRank) {
-        onError('Start rank must be less than or equal to end rank');
+        onError(t('startRankError'));
         return;
       }
       if (startRank < 1 || endRank < 1) {
-        onError('Ranks must be greater than 0');
+        onError(t('rankGreaterThanZero'));
         return;
       }
       const pages = calculatePagesFromRanks(startRank, endRank);
@@ -456,7 +459,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
       actualEndPage = pages.endPage;
     } else {
       if (startPage > endPage) {
-        onError('Start page must be less than or equal to end page');
+        onError(t('startPageError'));
         return;
       }
       actualStartPage = startPage;
@@ -733,13 +736,13 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
 
   const getApiStateText = () => {
     switch (apiState) {
-      case 'idle': return 'Ready';
-      case 'connecting': return 'Connecting...';
-      case 'fetching': return 'Fetching Data';
-      case 'processing': return 'Processing';
-      case 'complete': return 'Complete';
-      case 'error': return 'Error';
-      default: return 'Unknown';
+      case 'idle': return t('apiReadyStatus');
+      case 'connecting': return t('connecting');
+      case 'fetching': return t('fetchingData');
+      case 'processing': return t('processing');
+      case 'complete': return t('complete');
+      case 'error': return t('apiError');
+      default: return t('connecting');
     }
   };
 
@@ -763,20 +766,20 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
           onClick={() => setSearchMode('page')}
           disabled={isLoading}
         >
-          Search by Pages
+          {t('searchByPages')}
         </ToggleButton>
         <ToggleButton 
           active={searchMode === 'rank'} 
           onClick={() => setSearchMode('rank')}
           disabled={isLoading}
         >
-          Search by Rank Range
+          {t('searchByRank')}
         </ToggleButton>
       </SearchModeToggle>
       
       <SearchGrid>
         <InputGroup>
-          <label>Region:</label>
+          <label>{t('region')}</label>
           <Select 
             value={region} 
             onChange={(e) => {
@@ -792,7 +795,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         </InputGroup>
 
         <InputGroup>
-          <label>Target Winrate (%):</label>
+          <label>{t('targetWinrate')}</label>
           <Input
             type="text"
             value={targetWinrate}
@@ -805,7 +808,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         {searchMode === 'page' ? (
           <RangeInputGroup>
             <InputGroup>
-              <label>From Page:</label>
+              <label>{t('fromPage')}</label>
               <Input
                 type="number"
                 value={startPage}
@@ -817,7 +820,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
             </InputGroup>
             
             <InputGroup>
-              <label>To Page:</label>
+              <label>{t('toPage')}</label>
               <Input
                 type="number"
                 value={endPage}
@@ -831,7 +834,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         ) : (
           <RangeInputGroup>
             <InputGroup>
-              <label>From Rank:</label>
+              <label>{t('fromRank')}</label>
               <Input
                 type="number"
                 value={startRank}
@@ -843,7 +846,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
             </InputGroup>
             
             <InputGroup>
-              <label>To Rank:</label>
+              <label>{t('toRank')}</label>
               <Input
                 type="number"
                 value={endRank}
@@ -859,26 +862,26 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
 
       {/* Search Progress Info */}
       <ProgressInfoContainer>
-        <ProgressInfoTitle>🔍 Search Progress</ProgressInfoTitle>
+        <ProgressInfoTitle>{t('searchProgress')}</ProgressInfoTitle>
         <ProgressInfoGrid>
           <ProgressInfoItem>
-            <ProgressInfoLabel>Page Range:</ProgressInfoLabel>
-            <ProgressInfoValue>{totalPages > 0 ? `${totalPages} pages` : '-'}</ProgressInfoValue>
+            <ProgressInfoLabel>{t('pageRange')}</ProgressInfoLabel>
+            <ProgressInfoValue>{totalPages > 0 ? `${totalPages} ${t('pages')}` : '-'}</ProgressInfoValue>
           </ProgressInfoItem>
           <ProgressInfoItem>
-            <ProgressInfoLabel>Current Page:</ProgressInfoLabel>
+            <ProgressInfoLabel>{t('currentPage')}</ProgressInfoLabel>
             <ProgressInfoValue status={isLoading ? 'active' : 'success'}>
               {currentPage || '-'}
             </ProgressInfoValue>
           </ProgressInfoItem>
           <ProgressInfoItem>
-            <ProgressInfoLabel>Status:</ProgressInfoLabel>
+            <ProgressInfoLabel>{t('status')}</ProgressInfoLabel>
             <ApiStateIndicator state={apiState}>
               {getApiStateText()}
             </ApiStateIndicator>
           </ProgressInfoItem>
           <ProgressInfoItem>
-            <ProgressInfoLabel>Records Found:</ProgressInfoLabel>
+            <ProgressInfoLabel>{t('recordsFound')}</ProgressInfoLabel>
             <ProgressInfoValue status={recordsFound > 0 ? 'success' : undefined}>
               {recordsFound}
             </ProgressInfoValue>
@@ -886,13 +889,13 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
           {(searchDuration > 0 || isLoading) && (
             <>
               <ProgressInfoItem>
-                <ProgressInfoLabel>Duration:</ProgressInfoLabel>
+                <ProgressInfoLabel>{t('duration')}</ProgressInfoLabel>
                 <ProgressInfoValue>
-                  {isLoading ? `${liveDuration}s` : `${liveDuration}s`}
+                  {isLoading ? `${liveDuration}${t('seconds')}` : `${liveDuration}${t('seconds')}`}
                 </ProgressInfoValue>
               </ProgressInfoItem>
               <ProgressInfoItem>
-                <ProgressInfoLabel>Speed:</ProgressInfoLabel>
+                <ProgressInfoLabel>{t('speed')}</ProgressInfoLabel>
                 <ProgressInfoValue status="active">
                   {isLoading && currentPage > 0 && liveDuration > 0
                     ? (() => {
@@ -901,13 +904,13 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
                           : startPage;
                         const pagesStarted = currentPage - actualStartPage + 1;
                         const playersPerMinute = Math.round((pagesStarted * 50) / (liveDuration / 60));
-                        return `${playersPerMinute} p/m`;
+                        return `${playersPerMinute} ${t('playersPerMinute')}`;
                       })()
                     : !isLoading && totalPages > 0 && searchDuration > 0
                       ? (() => {
                           const totalPlayers = totalPages * 50;
                           const playersPerMinute = Math.round(totalPlayers / (searchDuration / 1000 / 60));
-                          return `${playersPerMinute} p/m`;
+                          return `${playersPerMinute} ${t('playersPerMinute')}`;
                         })()
                       : '-'
                   }
@@ -917,18 +920,16 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
           )}
         </ProgressInfoGrid>
         <HelpText>
-          ⚡ <strong>Smart Processing:</strong> Small ranges (1-3 pages) show incremental results per page. 
-          Larger ranges (4+ pages) use bulk processing for maximum speed. 
-          All filtering happens on frontend for optimal performance!
+          ⚡ <strong>{t('smartProcessing')}</strong> {t('smartProcessingDesc')}
         </HelpText>
       </ProgressInfoContainer>
 
       {searchMode === 'rank' && (
         <InfoBox>
-          <strong>Rank Range Info:</strong> {getSearchDescription()}
+          <strong>{t('rankRangeInfo')}</strong> {getSearchDescription()}
           <br />
           <small>
-            Each page contains 50 ranks (Page 1: ranks 1-50, Page 2: ranks 51-100, etc.)
+            {t('eachPageContains')}
           </small>
         </InfoBox>
       )}
@@ -936,24 +937,24 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
       <ButtonContainer>
         {isLoading ? (
           <StopButton onClick={stopSearch}>
-            Stop Search
+            {t('stopSearch')}
           </StopButton>
         ) : (
           <PrimaryButton onClick={searchByWinrate}>
-            Search Players
+            {t('searchPlayers')}
           </PrimaryButton>
         )}
         
         {searchData.length > 0 && (
           <SuccessButton onClick={exportSearchDataToCsv}>
-            Export Results ({searchData.length} records)
+            {t('exportResults')} ({searchData.length} {t('records')})
           </SuccessButton>
         )}
       </ButtonContainer>
 
       <Note>
-        <strong>Note:</strong> Enter 0 for winrate to get all players from selected {searchMode === 'page' ? 'pages' : 'rank range'}. 
-        Enter a number (e.g., 60) to filter players with winrate ≥ that percentage.
+        <strong>{t('searchNote')}</strong> {t('searchNoteDesc')} {searchMode === 'page' ? t('pages') : t('rankRange')}. 
+        {t('searchNoteDesc2')}
       </Note>
 
       {isLoading && (

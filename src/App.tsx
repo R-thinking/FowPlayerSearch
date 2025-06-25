@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import SearchComponent from './components/SearchComponent';
 import ResultComponent from './components/ResultComponent';
+import { LocaleProvider, useLocale } from './locales/LocaleContext';
+import { Locale } from './locales/index';
 
 interface RankingData {
   순위: string;
@@ -76,12 +78,49 @@ const SearchHeader = styled.div`
   color: white;
   padding: 20px;
   border-radius: 8px;
-  margin-bottom: 20px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
   h1 {
-    margin: 0 0 5px 0;
     font-size: 24px;
+  }
+`;
+
+const StatusAndLanguageRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const LanguageSelector = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const LanguageLabel = styled.span`
+  font-size: 12px;
+  color: #bdc3c7;
+`;
+
+const LanguageSelect = styled.select`
+  background-color: #34495e;
+  color: white;
+  border: 1px solid #4a6741;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+
+  option {
+    background-color: #34495e;
+    color: white;
   }
 `;
 
@@ -275,7 +314,9 @@ const CloseButton = styled.button`
   }
 `;
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { locale, setLocale, t } = useLocale();
+  
   // Search state
   const [searchResults, setSearchResults] = useState<RankingData[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
@@ -393,9 +434,9 @@ const App: React.FC = () => {
 
   const getServerStatusText = () => {
     switch (serverStatus) {
-      case 'online': return 'Server Online';
-      case 'offline': return 'Server Offline';
-      case 'checking': return 'Checking Server...';
+      case 'online': return t('serverOnline');
+      case 'offline': return t('serverOffline');
+      case 'checking': return t('checkingServer');
       default: return 'Unknown Status';
     }
   };
@@ -412,10 +453,10 @@ const App: React.FC = () => {
 
   const getStatusTitle = (stage: string) => {
     switch (stage) {
-      case 'initializing': return 'Initializing';
-      case 'starting_api': return 'Starting API Server';
-      case 'api_ready': return 'Ready!';
-      case 'error': return 'Error';
+      case 'initializing': return t('initializing');
+      case 'starting_api': return t('startingApiServer');
+      case 'api_ready': return t('ready');
+      case 'error': return t('error');
       default: return 'Loading';
     }
   };
@@ -435,6 +476,37 @@ const App: React.FC = () => {
     }
   };
 
+  const exportToCsv = () => {
+    if (searchResults.length === 0) {
+      alert(t('noDataToExport'));
+      return;
+    }
+
+    const headers = [t('rank'), t('playerName'), t('tier'), t('lp'), t('winrate'), t('mostChampion'), t('page')];
+    const csvContent = [
+      headers.join(','),
+      ...searchResults.map(row => [
+        row.순위,
+        `"${row['플레이어 이름']}"`,
+        row.티어,
+        row.LP,
+        row.승률,
+        `"${row['모스트 챔피언']}"`,
+        row.페이지 || ''
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'search_results.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Render startup splash if needed
   if (showStartupSplash && startupStatus) {
   return (
@@ -442,8 +514,8 @@ const App: React.FC = () => {
         <GlobalStyle />
         <SplashOverlay>
           <SplashContent>
-            <SplashTitle>FowCrawler</SplashTitle>
-            <SplashSubtitle>League of Legends Player Search</SplashSubtitle>
+            <SplashTitle>{t('splashTitle')}</SplashTitle>
+            <SplashSubtitle>{t('splashSubtitle')}</SplashSubtitle>
             
             <StatusContainer>
               <StatusIcon stage={startupStatus.stage}>
@@ -472,7 +544,7 @@ const App: React.FC = () => {
             </StatusContainer>
             
             <CloseButton onClick={() => setShowStartupSplash(false)}>
-              Close
+              {t('close')}
             </CloseButton>
           </SplashContent>
         </SplashOverlay>
@@ -487,10 +559,22 @@ const App: React.FC = () => {
         <MainContent>
           <SearchSection>
             <SearchHeader>
-              <h1>FOW Player Search</h1>
-              <ServerStatus status={serverStatus}>
-                {getServerStatusText()}
-              </ServerStatus>
+              <h1>{t('appTitle')}</h1>
+              <StatusAndLanguageRow>
+                <ServerStatus status={serverStatus}>
+                  {getServerStatusText()}
+                </ServerStatus>
+                <LanguageSelector>
+                  <LanguageLabel>{t('language')}</LanguageLabel>
+                  <LanguageSelect 
+                    value={locale} 
+                    onChange={(e) => setLocale(e.target.value as Locale)}
+                  >
+                    <option value="en">{t('english')}</option>
+                    <option value="ko">{t('korean')}</option>
+                  </LanguageSelect>
+                </LanguageSelector>
+              </StatusAndLanguageRow>
             </SearchHeader>
             <SearchComponent 
               onSearchResults={handleSearchResults}
@@ -511,6 +595,14 @@ const App: React.FC = () => {
         </MainContent>
       </Container>
     </AppContainer>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <LocaleProvider>
+      <AppContent />
+    </LocaleProvider>
   );
 };
 

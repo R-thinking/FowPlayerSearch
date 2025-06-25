@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useLocale } from '../locales/LocaleContext';
 
 interface RankingData {
   순위: string;
@@ -240,12 +241,14 @@ const LoadingText = styled.p`
 `;
 
 const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = false, region }) => {
+  const { t, tn } = useLocale();
+
   const renderTableContent = () => {
     if (isLoading) {
       return (
         <LoadingState>
           <LoadingSpinner />
-          <LoadingText>Loading search results...</LoadingText>
+          <LoadingText>{t('loadingSearchResults')}</LoadingText>
         </LoadingState>
       );
     }
@@ -254,8 +257,8 @@ const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = fal
       return (
         <EmptyState>
           <EmptyIcon>🔍</EmptyIcon>
-          <EmptyText>No search results yet</EmptyText>
-          <EmptySubtext>Use the search panel to find League of Legends players</EmptySubtext>
+          <EmptyText>{t('noSearchResultsYet')}</EmptyText>
+          <EmptySubtext>{t('useSearchPanel')}</EmptySubtext>
         </EmptyState>
       );
     }
@@ -265,13 +268,13 @@ const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = fal
         <Table>
           <thead>
             <tr>
-              <TableHeader>순위</TableHeader>
-              <TableHeader>플레이어 이름</TableHeader>
-              <TableHeader>티어</TableHeader>
-              <TableHeader>LP</TableHeader>
-              <TableHeader>승률</TableHeader>
-              <TableHeader>모스트 챔피언</TableHeader>
-              <TableHeader>페이지</TableHeader>
+              <TableHeader>{t('rank')}</TableHeader>
+              <TableHeader>{t('playerName')}</TableHeader>
+              <TableHeader>{t('tier')}</TableHeader>
+              <TableHeader>{t('lp')}</TableHeader>
+              <TableHeader>{t('winrate')}</TableHeader>
+              <TableHeader>{t('mostChampion')}</TableHeader>
+              <TableHeader>{t('page')}</TableHeader>
             </tr>
           </thead>
           <tbody>
@@ -301,13 +304,13 @@ const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = fal
   return (
     <ResultContainer>
       <ResultHeader>
-        <ResultTitle>Search Results</ResultTitle>
+        <ResultTitle>{t('searchResults')}</ResultTitle>
         <ResultCount>
           {isLoading 
-            ? 'Searching...' 
+            ? t('searching') 
             : data.length === 0 
-              ? 'No results to display' 
-              : `${data.length} players found`
+              ? t('noResultsToDisplay') 
+              : `${data.length} ${t('playersFound')}`
           }
         </ResultCount>
       </ResultHeader>

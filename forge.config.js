@@ -1,6 +1,7 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 const path = require('path');
+const packageJson = require('./package.json');
 
 module.exports = {
   packagerConfig: {
@@ -30,24 +31,52 @@ module.exports = {
         name: 'FowCrawler',
         authors: 'r-thinking',
         exe: 'FowCrawler.exe',
-        setupExe: 'FowCrawler-Setup.exe',
-        setupIcon: path.join(__dirname, 'assets', 'icon.ico'), // Absolute path to ICO file
-        noMsi: true, // Set to false if you want MSI installer too
+        setupExe: `FowCrawler-Windows-v${packageJson.version}-Setup.exe`,
+        setupIcon: path.join(__dirname, 'assets', 'icon.ico'),
+        noMsi: true,
+        // Customize installer metadata for a more professional appearance
+        title: 'FowCrawler',
+        description: 'League of Legends Player Search Tool',
+        owners: 'r-thinking',
+        copyright: `Copyright © ${new Date().getFullYear()} r-thinking`,
+        // Replace the emerald animation with a custom loading GIF
+        // loadingGif: path.join(__dirname, 'assets', 'installer-loading.gif'),
+        // NOTE: To use custom loading animation, create a GIF file and uncomment the line above
       },
     },
+    // Alternative: Traditional Windows MSI installer (uncomment to use)
+    // {
+    //   name: '@electron-forge/maker-wix',
+    //   config: {
+    //     name: `FowCrawler-Windows-v${packageJson.version}`,
+    //     manufacturer: 'r-thinking',
+    //     description: 'League of Legends Player Search Tool',
+    //     version: packageJson.version,
+    //     ui: {
+    //       chooseDirectory: true,
+    //       images: {
+    //         // Optional: Add custom branding images
+    //         // background: path.join(__dirname, 'assets', 'installer-bg-493x312.bmp'),
+    //         // banner: path.join(__dirname, 'assets', 'installer-banner-493x58.bmp')
+    //       }
+    //     }
+    //   },
+    // },
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin', 'win32'],
-      config: {
-        // Ensure ZIP is created for both platforms
-      }
+      config: (arch, platform) => ({
+        name: platform === 'darwin' 
+          ? `FowCrawler-macOS-v${packageJson.version}` 
+          : `FowCrawler-Windows-v${packageJson.version}`
+      })
     },
     {
       name: '@electron-forge/maker-dmg',
       platforms: ['darwin'],
       config: {
         // Minimal configuration to avoid hdiutil issues
-        name: 'FowCrawler',
+        name: `FowCrawler-macOS-v${packageJson.version}`,
         overwrite: true,
         debug: true
       }

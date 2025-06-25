@@ -1,8 +1,8 @@
 {
   "name": "fowcrawler",
   "productName": "fowcrawler",
-  "version": "1.6.9",
-  "description": "My Electron application description",
+  "version": "1.7.0",
+  "description": "League of Legends Player Search Tool",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
