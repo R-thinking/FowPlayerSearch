@@ -69,14 +69,6 @@ class ProgressTracker:
         self.current_page_data = []
         # When finished, current_page should reflect that we've completed all pages
         self.current_page = self.total_pages if self.completed_pages == self.total_pages else self.current_page
-    
-    def get_eta(self):
-        if not self.page_times or self.completed_pages == 0:
-            return None
-        
-        avg_time_per_page = sum(self.page_times) / len(self.page_times) / self.completed_pages
-        remaining_pages = self.total_pages - self.completed_pages
-        return remaining_pages * avg_time_per_page
 
 # Global progress tracker
 progress_tracker = ProgressTracker()
@@ -544,12 +536,6 @@ def start_multi_page_crawl():
 @app.route('/api/progress')
 def get_current_progress():
     """Get current crawling progress"""
-    eta_seconds = progress_tracker.get_eta()
-    eta_formatted = None
-    if eta_seconds:
-        eta_time = datetime.now() + timedelta(seconds=eta_seconds)
-        eta_formatted = eta_time.strftime("%H:%M:%S")
-    
     elapsed_seconds = 0
     if progress_tracker.start_time:
         elapsed_seconds = (datetime.now() - progress_tracker.start_time).total_seconds()
@@ -560,8 +546,6 @@ def get_current_progress():
         'current_page': progress_tracker.current_page,
         'remaining_pages': progress_tracker.total_pages - progress_tracker.completed_pages,
         'progress_percent': (progress_tracker.completed_pages / progress_tracker.total_pages * 100) if progress_tracker.total_pages > 0 else 0,
-        'eta_seconds': eta_seconds,
-        'eta_formatted': eta_formatted,
         'elapsed_seconds': elapsed_seconds,
         'is_running': progress_tracker.is_running,
         'error_count': progress_tracker.error_count,

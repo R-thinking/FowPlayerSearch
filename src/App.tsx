@@ -280,6 +280,7 @@ const App: React.FC = () => {
   const [searchResults, setSearchResults] = useState<RankingData[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+  const [currentRegion, setCurrentRegion] = useState<string>('kr');
   
   // Startup status state
   const [startupStatus, setStartupStatus] = useState<StartupStatus | null>(null);
@@ -319,8 +320,8 @@ const App: React.FC = () => {
           };
           
           ipcRenderer.on('startup-status-update', handleStatusUpdate);
-          
-          return () => {
+
+    return () => {
             ipcRenderer.removeListener('startup-status-update', handleStatusUpdate);
           };
         } else {
@@ -386,6 +387,10 @@ const App: React.FC = () => {
     // Error handling removed - errors are handled within SearchComponent
   };
 
+  const handleRegionChange = (region: string) => {
+    setCurrentRegion(region);
+  };
+
   const getServerStatusText = () => {
     switch (serverStatus) {
       case 'online': return 'Server Online';
@@ -432,7 +437,7 @@ const App: React.FC = () => {
 
   // Render startup splash if needed
   if (showStartupSplash && startupStatus) {
-    return (
+  return (
       <AppContainer>
         <GlobalStyle />
         <SplashOverlay>
@@ -492,6 +497,7 @@ const App: React.FC = () => {
               onSearchStart={handleSearchStart}
               onSearchStop={handleSearchStop}
               onError={handleError}
+              onRegionChange={handleRegionChange}
             />
           </SearchSection>
           
@@ -499,6 +505,7 @@ const App: React.FC = () => {
             <ResultComponent 
               data={searchResults}
               isLoading={isSearching}
+              region={currentRegion}
             />
           </ResultSection>
         </MainContent>

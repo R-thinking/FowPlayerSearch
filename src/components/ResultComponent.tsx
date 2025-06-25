@@ -14,7 +14,33 @@ interface RankingData {
 interface ResultComponentProps {
   data: RankingData[];
   isLoading?: boolean;
+  region?: string;
 }
+
+// Helper function to generate FOW.LOL profile link
+const generateProfileLink = (playerName: string, region: string = 'kr'): string => {
+  // Parse player name to extract ID and tag
+  // Format: "PlayerName#TAG" or just "PlayerName"
+  let id = playerName;
+  let tag = '';
+  
+  if (playerName.includes('#')) {
+    const parts = playerName.split('#');
+    id = parts[0];
+    tag = parts[1] || '';
+  }
+  
+  // Replace spaces with + in ID
+  const formattedId = id.replace(/\s+/g, '+');
+  
+  // Generate link: https://www.fow.lol/find/{region}/{id}-{tag}
+  const baseUrl = 'https://www.fow.lol/find';
+  if (tag) {
+    return `${baseUrl}/${region.toLowerCase()}/${formattedId}-${tag}`;
+  } else {
+    return `${baseUrl}/${region.toLowerCase()}/${formattedId}`;
+  }
+};
 
 // Styled Components
 const ResultContainer = styled.div`
@@ -110,6 +136,23 @@ const PlayerNameCell = styled(TableCell)`
   white-space: nowrap;
 `;
 
+const PlayerLink = styled.a`
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #2980b9;
+    text-decoration: underline;
+  }
+
+  &:visited {
+    color: #8e44ad;
+  }
+`;
+
 const TierCell = styled(TableCell)`
   font-weight: 500;
   color: #8e44ad;
@@ -196,7 +239,7 @@ const LoadingText = styled.p`
   margin: 0;
 `;
 
-const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = false }) => {
+const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = false, region }) => {
   const renderTableContent = () => {
     if (isLoading) {
       return (
@@ -236,7 +279,9 @@ const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = fal
               <TableRow key={index}>
                 <RankCell>{player.순위}</RankCell>
                 <PlayerNameCell title={player['플레이어 이름']}>
-                  {player['플레이어 이름']}
+                  <PlayerLink href={generateProfileLink(player['플레이어 이름'], region)} target="_blank">
+                    {player['플레이어 이름']}
+                  </PlayerLink>
                 </PlayerNameCell>
                 <TierCell>{player.티어}</TierCell>
                 <LPCell>{player.LP}</LPCell>

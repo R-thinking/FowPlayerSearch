@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 
 interface RankingData {
@@ -16,6 +16,7 @@ interface SearchComponentProps {
   onError: (error: string) => void;
   onSearchStart?: () => void;
   onSearchStop?: () => void;
+  onRegionChange?: (region: string) => void;
 }
 
 // Styled Components
@@ -366,7 +367,7 @@ const HelpText = styled.div`
   border-top: 1px solid #e9ecef;
 `;
 
-const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onError, onSearchStart, onSearchStop }) => {
+const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onError, onSearchStart, onSearchStop, onRegionChange }) => {
   // Search mode
   const [searchMode, setSearchMode] = useState<'page' | 'rank'>('page');
   
@@ -385,55 +386,25 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
   // Progress tracking state
   const [totalPages, setTotalPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(0);
-  const [completedPages, setCompletedPages] = useState<number>(0);
-  const [averageTimePerCompletedPage, setAverageTimePerCompletedPage] = useState<number>(0);
-  const [apiState, setApiState] = useState<'idle' | 'connecting' | 'fetching' | 'processing' | 'complete' | 'error'>('idle');
   const [recordsFound, setRecordsFound] = useState<number>(0);
-  const [searchStartTime, setSearchStartTime] = useState<number>(0);
   const [searchDuration, setSearchDuration] = useState<number>(0);
   const [liveDuration, setLiveDuration] = useState<number>(0);
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number>(0);
+  const [averageTimePerCompletedPage, setAverageTimePerCompletedPage] = useState<number>(0);
+  const [apiState, setApiState] = useState<'idle' | 'connecting' | 'fetching' | 'processing' | 'complete' | 'error'>('idle');
 
-  // Abort controller for cancelling searches
+  // Add state for tracking search start time
+  const [searchStartTime, setSearchStartTime] = useState<number>(0);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Live duration timer
-  React.useEffect(() => {
+  useEffect(() => {
     let intervalId: NodeJS.Timeout;
     
-    if (isLoading && searchStartTime > 0 && apiState !== 'complete') {
+    if (isLoading && searchStartTime > 0) {
       intervalId = setInterval(() => {
         const elapsed = Math.round((Date.now() - searchStartTime) / 1000);
         setLiveDuration(elapsed);
-        
-        // Calculate estimated time remaining based on current progress
-        if (averageTimePerCompletedPage > 0 && totalPages > 0) {
-          const actualStartPage = searchMode === 'rank' 
-            ? calculatePagesFromRanks(startRank, endRank).startPage 
-            : startPage;
-          const pagesStarted = currentPage > 0 ? currentPage - actualStartPage + 1 : 0;
-          const pagesNotStarted = totalPages - pagesStarted;
-          
-          // Only estimate time for pages not yet started
-          const estimatedTimeRemaining = Math.max(0, averageTimePerCompletedPage * pagesNotStarted);
-          setEstimatedTimeRemaining(Math.round(estimatedTimeRemaining));
-        } else if (currentPage > 0 && elapsed > 10) {
-          // Rough estimate for first page (after 10 seconds)
-          const actualStartPage = searchMode === 'rank' 
-            ? calculatePagesFromRanks(startRank, endRank).startPage 
-            : startPage;
-          const pagesStarted = currentPage - actualStartPage + 1;
-          const estimatedTimePerPage = elapsed / (pagesStarted * 0.3); // assume 30% progress on current page
-          const estimatedTimeRemaining = estimatedTimePerPage * (totalPages - pagesStarted + 0.7);
-          setEstimatedTimeRemaining(Math.round(estimatedTimeRemaining));
-        } else {
-          setEstimatedTimeRemaining(0);
-        }
       }, 1000);
-    } else {
-      if (!isLoading || apiState === 'complete') {
-        setEstimatedTimeRemaining(0);
-      }
     }
 
     return () => {
@@ -441,7 +412,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         clearInterval(intervalId);
       }
     };
-  }, [isLoading, searchStartTime, completedPages, totalPages, apiState, currentPage, searchMode, startRank, endRank, startPage, averageTimePerCompletedPage]);
+  }, [isLoading, searchStartTime]);
 
   const regions = [
     { value: 'kr', label: 'Korea' },
@@ -495,8 +466,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
     // Initialize progress tracking
     setTotalPages(actualEndPage - actualStartPage + 1);
     setCurrentPage(0);
-    setCompletedPages(0);
-    setAverageTimePerCompletedPage(0);
     setRecordsFound(0);
     setApiState('connecting');
     
@@ -505,7 +474,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
     setSearchStartTime(startTime);
     setSearchDuration(0);
     setLiveDuration(0);
-    setEstimatedTimeRemaining(0);
 
     // Create abort controller for this search
     const controller = new AbortController();
@@ -594,9 +562,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
             setRecordsFound(filteredData.length);
             setSearchData(filteredData);
             onSearchResults(filteredData);
-            
-            // Update completed pages count
-            setCompletedPages(page - actualStartPage + 1);
             
             // Update average time per completed page (stable average)
             const completedCount = page - actualStartPage + 1;
@@ -781,10 +746,10 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
   const getProgressPercentage = () => {
     if (totalPages === 0) return 0;
     if (apiState === 'complete') return 100;
-    if (completedPages === 0) return 0;
+    if (currentPage === 0) return 0;
     
-    // Calculate progress based on completed pages
-    const progressPercentage = Math.round((completedPages / totalPages) * 100);
+    // Calculate progress based on current page
+    const progressPercentage = Math.round((currentPage / totalPages) * 100);
     
     // Ensure we don't show 100% unless actually complete
     return Math.min(progressPercentage, 99);
@@ -814,7 +779,10 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
           <label>Region:</label>
           <Select 
             value={region} 
-            onChange={(e) => setRegion(e.target.value)}
+            onChange={(e) => {
+              setRegion(e.target.value);
+              onRegionChange?.(e.target.value);
+            }}
             disabled={isLoading}
           >
             {regions.map(r => (
@@ -945,17 +913,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
                   }
                 </ProgressInfoValue>
               </ProgressInfoItem>
-              {isLoading && estimatedTimeRemaining > 0 && (
-                <ProgressInfoItem>
-                  <ProgressInfoLabel>Est. Time Left:</ProgressInfoLabel>
-                  <ProgressInfoValue status="waiting">
-                    {estimatedTimeRemaining < 60 
-                      ? `${estimatedTimeRemaining}s`
-                      : `${Math.floor(estimatedTimeRemaining / 60)}m ${estimatedTimeRemaining % 60}s`
-                    }
-                  </ProgressInfoValue>
-                </ProgressInfoItem>
-              )}
             </>
           )}
         </ProgressInfoGrid>
