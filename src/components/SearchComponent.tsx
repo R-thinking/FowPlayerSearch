@@ -27,6 +27,16 @@ const SearchContainer = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 100%;
+  
+  /* Smaller desktop: Slightly reduce padding */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 18px;
+  }
+  
+  /* Mobile: Reduce padding */
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
 `;
 
 const SearchModeToggle = styled.div`
@@ -34,6 +44,18 @@ const SearchModeToggle = styled.div`
   justify-content: center;
   margin-bottom: 20px;
   gap: 10px;
+  
+  /* Smaller desktop: Slightly reduce margin */
+  @media (max-width: 1500px), (max-height: 880px) {
+    margin-bottom: 18px;
+    gap: 9px;
+  }
+  
+  /* Mobile: Reduce margin and gap */
+  @media (max-width: 768px) {
+    margin-bottom: 15px;
+    gap: 8px;
+  }
 `;
 
 const ToggleButton = styled.button<{ active: boolean }>`
@@ -55,6 +77,18 @@ const ToggleButton = styled.button<{ active: boolean }>`
     opacity: 0.6;
     cursor: not-allowed;
   }
+  
+  /* Smaller desktop: Slightly reduce padding */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 7px 14px;
+    font-size: 11.5px;
+  }
+  
+  /* Mobile: Smaller buttons */
+  @media (max-width: 768px) {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
 `;
 
 const SearchGrid = styled.div`
@@ -62,6 +96,18 @@ const SearchGrid = styled.div`
   flex-direction: column;
   gap: 15px;
   margin-bottom: 20px;
+  
+  /* Smaller desktop: Slightly reduce gaps */
+  @media (max-width: 1500px), (max-height: 880px) {
+    gap: 13px;
+    margin-bottom: 18px;
+  }
+  
+  /* Mobile: Reduce gaps */
+  @media (max-width: 768px) {
+    gap: 12px;
+    margin-bottom: 15px;
+  }
 `;
 
 const InputGroup = styled.div`
@@ -70,6 +116,22 @@ const InputGroup = styled.div`
     margin-bottom: 5px;
     font-weight: bold;
     font-size: 14px;
+  }
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    label {
+      font-size: 13.5px;
+      margin-bottom: 4px;
+    }
+  }
+  
+  /* Mobile: Smaller labels */
+  @media (max-width: 768px) {
+    label {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
   }
 `;
 
@@ -85,6 +147,18 @@ const Input = styled.input`
     background-color: #f5f5f5;
     cursor: not-allowed;
   }
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 7px;
+    font-size: 13.5px;
+  }
+  
+  /* Mobile: Smaller inputs */
+  @media (max-width: 768px) {
+    padding: 6px;
+    font-size: 13px;
+  }
 `;
 
 const Select = styled.select`
@@ -99,6 +173,18 @@ const Select = styled.select`
     background-color: #f5f5f5;
     cursor: not-allowed;
   }
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 7px;
+    font-size: 13.5px;
+  }
+  
+  /* Mobile: Smaller selects */
+  @media (max-width: 768px) {
+    padding: 6px;
+    font-size: 13px;
+  }
 `;
 
 const RangeInputGroup = styled.div`
@@ -112,6 +198,18 @@ const ButtonContainer = styled.div`
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
+  
+  /* Smaller desktop: Slightly reduce gaps and margins */
+  @media (max-width: 1500px), (max-height: 880px) {
+    gap: 9px;
+    margin-bottom: 18px;
+  }
+  
+  /* Mobile: Reduce gaps and margins */
+  @media (max-width: 768px) {
+    gap: 8px;
+    margin-bottom: 15px;
+  }
 `;
 
 const PrimaryButton = styled.button`
@@ -132,6 +230,18 @@ const PrimaryButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 11px 18px;
+    font-size: 13.5px;
+  }
+  
+  /* Mobile: Smaller buttons */
+  @media (max-width: 768px) {
+    padding: 10px 16px;
+    font-size: 13px;
   }
 `;
 
@@ -154,6 +264,18 @@ const StopButton = styled.button`
     opacity: 0.6;
     cursor: not-allowed;
   }
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 11px 18px;
+    font-size: 13.5px;
+  }
+  
+  /* Mobile: Smaller buttons */
+  @media (max-width: 768px) {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
 `;
 
 const SuccessButton = styled.button`
@@ -174,6 +296,18 @@ const SuccessButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 9px 18px;
+    font-size: 13.5px;
+  }
+  
+  /* Mobile: Smaller buttons */
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 `;
 
@@ -270,6 +404,20 @@ const ProgressInfoContainer = styled.div`
   padding: 15px;
   margin-bottom: 20px;
   font-size: 13px;
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 13px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+  }
+  
+  /* Mobile: Reduce padding and font size */
+  @media (max-width: 768px) {
+    padding: 12px;
+    margin-bottom: 15px;
+    font-size: 12px;
+  }
 `;
 
 const ProgressInfoTitle = styled.h3`
@@ -277,6 +425,18 @@ const ProgressInfoTitle = styled.h3`
   font-size: 14px;
   color: #2c3e50;
   font-weight: bold;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 13.5px;
+    margin-bottom: 11px;
+  }
+  
+  /* Mobile: Smaller title */
+  @media (max-width: 768px) {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
 `;
 
 const ProgressInfoGrid = styled.div`
@@ -284,6 +444,19 @@ const ProgressInfoGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-bottom: 12px;
+  
+  /* Smaller desktop: Slightly reduce gap */
+  @media (max-width: 1500px), (max-height: 880px) {
+    gap: 9px;
+    margin-bottom: 11px;
+  }
+  
+  /* Mobile: Single column layout */
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
 `;
 
 const ProgressInfoItem = styled.div`
@@ -398,6 +571,51 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
   // Add state for tracking search start time
   const [searchStartTime, setSearchStartTime] = useState<number>(0);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+
+  // Progress polling for large range searches
+  const [progressPollingInterval, setProgressPollingInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Progress polling function
+  const pollProgress = async () => {
+    try {
+      const response = await fetch('http://localhost:5002/api/progress');
+      if (response.ok) {
+        const progressData = await response.json();
+        if (progressData.is_running) {
+          setCurrentPage(progressData.current_page);
+          setRecordsFound(progressData.total_records);
+          // You could also update other progress indicators here
+        }
+      }
+    } catch (error) {
+      // Silently handle polling errors to avoid spam
+      console.log('Progress polling error:', error);
+    }
+  };
+
+  // Start progress polling
+  const startProgressPolling = () => {
+    if (progressPollingInterval) {
+      clearInterval(progressPollingInterval);
+    }
+    const interval = setInterval(pollProgress, 1000); // Poll every second
+    setProgressPollingInterval(interval);
+  };
+
+  // Stop progress polling
+  const stopProgressPolling = () => {
+    if (progressPollingInterval) {
+      clearInterval(progressPollingInterval);
+      setProgressPollingInterval(null);
+    }
+  };
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      stopProgressPolling();
+    };
+  }, []);
 
   // Live duration timer
   useEffect(() => {
@@ -580,7 +798,10 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
       } else {
         // BULK PROCESSING for larger ranges (4+ pages)
         setApiState('fetching');
-        setCurrentPage(0);
+        setCurrentPage(actualStartPage);
+        
+        // Start progress polling for real-time updates
+        startProgressPolling();
         
         const response = await fetch(
           `http://localhost:5002/api/search/winrate?region=${region}&winrate=0&start_page=${actualStartPage}&end_page=${actualEndPage}`,
@@ -593,15 +814,18 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         );
         
         if (!response.ok) {
+          stopProgressPolling();
           setApiState('error');
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         // Get all raw data
         setApiState('processing');
-        setCurrentPage(Math.floor((actualStartPage + actualEndPage) / 2));
         
         const result = await response.json();
+        
+        // Stop progress polling once we get the result
+        stopProgressPolling();
         
         if (!result.success || !result.data) {
           setApiState('error');
@@ -613,7 +837,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         
         // Process filtering on frontend
         setApiState('processing');
-        setCurrentPage(actualEndPage - 1);
         
         let filteredData = allRawData;
         
@@ -659,6 +882,9 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
       setApiState('complete');
       
     } catch (err) {
+      // Stop progress polling in case of error
+      stopProgressPolling();
+      
       const finalDuration = Date.now() - startTime;
       const finalDurationSeconds = Math.round(finalDuration / 1000);
       console.log('Search error/cancelled - Duration:', finalDuration, 'ms =', finalDurationSeconds, 's');
@@ -673,6 +899,8 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
         onError(err instanceof Error ? err.message : 'Unknown error occurred');
       }
     } finally {
+      // Ensure progress polling is stopped
+      stopProgressPolling();
       setIsLoading(false);
       setAbortController(null);
     }
@@ -680,6 +908,9 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
 
   const stopSearch = () => {
     if (abortController && searchStartTime > 0) {
+      // Stop progress polling
+      stopProgressPolling();
+      
       const finalDuration = Date.now() - searchStartTime;
       const finalDurationSeconds = Math.round(finalDuration / 1000);
       console.log('Search manually stopped - Duration:', finalDuration, 'ms =', finalDurationSeconds, 's');
@@ -871,7 +1102,12 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSearchResults, onEr
           <ProgressInfoItem>
             <ProgressInfoLabel>{t('currentPage')}</ProgressInfoLabel>
             <ProgressInfoValue status={isLoading ? 'active' : 'success'}>
-              {currentPage || '-'}
+              {isLoading && currentPage > 0 
+                ? `${currentPage} ${t('crawling')}`
+                : currentPage > 0 
+                  ? `${currentPage} ${t('completed')}`
+                  : '-'
+              }
             </ProgressInfoValue>
           </ProgressInfoItem>
           <ProgressInfoItem>

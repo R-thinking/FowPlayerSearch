@@ -60,8 +60,8 @@ export const en = {
   
   // Search Notes
   searchNote: "Note:",
-  searchNoteDesc: "Enter 0 for winrate to get all players from selected",
-  searchNoteDesc2: "Enter a number (e.g., 60) to filter players with winrate ≥ that percentage.",
+  searchNoteDesc: "Search will scan through the specified",
+  searchNoteDesc2: "Higher winrates may require searching more pages to find sufficient matches.",
   pages: "pages",
   rankRange: "rank range",
   
@@ -103,11 +103,15 @@ export const en = {
   
   // Units
   seconds: "s",
-  playersPerMinute: "p/m",
+  playersPerMinute: "players/min",
   records: "records",
   
   // Language
   language: "Language:",
   english: "English",
-  korean: "한국어"
+  korean: "한국어",
+  
+  // Progress Status
+  crawling: "(crawling)",
+  completed: "(completed)"
 }; 

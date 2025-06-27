@@ -348,8 +348,8 @@ const createWindow = () => {
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
   
   // Calculate 70% of screen dimensions
-  const windowWidth = Math.floor(screenWidth * 0.7);
-  const windowHeight = Math.floor(screenHeight * 0.7);
+  const windowWidth = Math.floor(screenWidth * 0.85);
+  const windowHeight = Math.floor(screenHeight * 0.9);
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({

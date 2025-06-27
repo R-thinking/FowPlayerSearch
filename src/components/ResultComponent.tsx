@@ -56,6 +56,15 @@ const ResultContainer = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 100%;
+  
+  /* Mobile: Use consistent height for all states */
+  @media (max-width: 768px) {
+    height: auto;
+    min-height: 400px;
+    max-height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 const ResultHeader = styled.div`
@@ -64,30 +73,88 @@ const ResultHeader = styled.div`
   background-color: #f8f9fa;
   border-radius: 8px 8px 0 0;
   height: 80px;
+  
+  /* Smaller desktop: Slightly reduce padding and height */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 18px;
+    height: 75px;
+  }
+  
+  /* Mobile: Reduce padding and height */
+  @media (max-width: 768px) {
+    padding: 15px;
+    height: 60px;
+  }
 `;
 
 const ResultTitle = styled.h2`
   margin: 0;
   color: #2c3e50;
   font-size: 18px;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 17px;
+  }
+  
+  /* Mobile: Smaller title */
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
 `;
 
 const ResultCount = styled.p`
   margin: 5px 0 0 0;
   color: #666;
   font-size: 14px;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 13.5px;
+    margin: 4px 0 0 0;
+  }
+  
+  /* Mobile: Smaller text */
+  @media (max-width: 768px) {
+    font-size: 13px;
+    margin: 3px 0 0 0;
+  }
 `;
 
 const TableContainer = styled.div`
   max-height: calc(100vh - 200px);
   overflow-y: auto;
   padding: 0;
+  
+  /* Smaller desktop: Slightly adjust max height */
+  @media (max-width: 1500px), (max-height: 880px) {
+    max-height: calc(100vh - 180px);
+  }
+  
+  /* Mobile: Use consistent height with other states */
+  @media (max-width: 768px) {
+    flex: 1;
+    max-height: 440px;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 12.5px;
+  }
+  
+  /* Mobile: Smaller font and minimum width */
+  @media (max-width: 768px) {
+    font-size: 12px;
+    min-width: 800px; /* Ensure table doesn't get too cramped */
+  }
 `;
 
 const TableHeader = styled.th`
@@ -104,6 +171,18 @@ const TableHeader = styled.th`
 
   &:last-child {
     border-right: none;
+  }
+  
+  /* Smaller desktop: Slightly reduce padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 10px 7px;
+    font-size: 11.5px;
+  }
+  
+  /* Mobile: Reduce padding */
+  @media (max-width: 768px) {
+    padding: 8px 6px;
+    font-size: 11px;
   }
 `;
 
@@ -126,6 +205,16 @@ const TableCell = styled.td`
   &:last-child {
     border-right: none;
   }
+  
+  /* Smaller desktop: Slightly reduce padding */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 9px 7px;
+  }
+  
+  /* Mobile: Reduce padding */
+  @media (max-width: 768px) {
+    padding: 8px 6px;
+  }
 `;
 
 const RankCell = styled(TableCell)`
@@ -142,6 +231,16 @@ const PlayerNameCell = styled(TableCell)`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  
+  /* Smaller desktop: Slightly reduce max width */
+  @media (max-width: 1500px), (max-height: 880px) {
+    max-width: 135px;
+  }
+  
+  /* Mobile: Adjust max width */
+  @media (max-width: 768px) {
+    max-width: 120px;
+  }
 `;
 
 const PlayerLink = styled.span`
@@ -179,6 +278,16 @@ const ChampionCell = styled(TableCell)`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  
+  /* Smaller desktop: Slightly reduce max width */
+  @media (max-width: 1500px), (max-height: 880px) {
+    max-width: 110px;
+  }
+  
+  /* Mobile: Adjust max width */
+  @media (max-width: 768px) {
+    max-width: 100px;
+  }
 `;
 
 const PageCell = styled(TableCell)`
@@ -195,23 +304,70 @@ const EmptyState = styled.div`
   height: 300px;
   color: #666;
   text-align: center;
+  
+  /* Smaller desktop: Slightly reduce height */
+  @media (max-width: 1500px), (max-height: 880px) {
+    height: 250px;
+  }
+  
+  /* Mobile: Use consistent height with other states */
+  @media (max-width: 768px) {
+    flex: 1;
+    height: auto;
+    min-height: 340px;
+    padding: 20px;
+  }
 `;
 
 const EmptyIcon = styled.div`
   font-size: 48px;
   margin-bottom: 16px;
   opacity: 0.5;
+  
+  /* Smaller desktop: Slightly reduce icon size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 42px;
+    margin-bottom: 14px;
+  }
+  
+  /* Mobile: Smaller icon */
+  @media (max-width: 768px) {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
 `;
 
 const EmptyText = styled.p`
   font-size: 16px;
   margin: 0;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 15px;
+  }
+  
+  /* Mobile: Smaller text */
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
 `;
 
 const EmptySubtext = styled.p`
   font-size: 14px;
   margin: 8px 0 0 0;
   opacity: 0.7;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 13px;
+    margin: 7px 0 0 0;
+  }
+  
+  /* Mobile: Smaller text */
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin: 6px 0 0 0;
+  }
 `;
 
 const LoadingState = styled.div`
@@ -221,6 +377,19 @@ const LoadingState = styled.div`
   justify-content: center;
   height: calc(100% - 80px);
   color: #666;
+  
+  /* Smaller desktop: Adjust height for smaller header */
+  @media (max-width: 1500px), (max-height: 880px) {
+    height: calc(100% - 75px);
+  }
+  
+  /* Mobile: Use consistent height with other states */
+  @media (max-width: 768px) {
+    flex: 1;
+    height: auto;
+    min-height: 340px;
+    padding: 20px;
+  }
 `;
 
 const LoadingSpinner = styled.div`
@@ -236,11 +405,31 @@ const LoadingSpinner = styled.div`
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+  
+  /* Mobile: Slightly larger spinner for better visibility */
+  @media (max-width: 768px) {
+    width: 48px;
+    height: 48px;
+    border-width: 5px;
+    margin-bottom: 20px;
+  }
 `;
 
 const LoadingText = styled.p`
   font-size: 16px;
   margin: 0;
+  text-align: center;
+  
+  /* Smaller desktop: Slightly reduce font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    font-size: 15px;
+  }
+  
+  /* Mobile: Adjust font size and add padding */
+  @media (max-width: 768px) {
+    font-size: 14px;
+    padding: 0 10px;
+  }
 `;
 
 const ResultComponent: React.FC<ResultComponentProps> = ({ data, isLoading = false, region }) => {

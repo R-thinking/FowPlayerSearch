@@ -57,6 +57,20 @@ const Container = styled.div`
   height: 95%;
   padding: 20px;
   background-color: #f5f5f5;
+  
+  /* Smaller desktop: Slightly reduce padding and adjust width */
+  @media (max-width: 1500px), (max-height: 880px) {
+    padding: 15px;
+    width: 97%;
+    height: 97%;
+  }
+  
+  /* Mobile: Reduce padding and adjust width */
+  @media (max-width: 768px) {
+    padding: 10px;
+    width: 98%;
+    height: 98%;
+  }
 `;
 
 const MainContent = styled.div`
@@ -64,12 +78,38 @@ const MainContent = styled.div`
   height: 100%;
   gap: 20px;
   align-items: flex-start;
+  
+  /* Smaller desktop: Slightly reduce gap */
+  @media (max-width: 1500px), (max-height: 880px) {
+    gap: 15px;
+  }
+  
+  /* Mobile: Stack vertically with smaller gaps */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
 `;
 
 const SearchSection = styled.div`
   flex: 0 0 30%;
   min-width: 300px;
-  height: calc(100% - 80px - 20px);
+  height: calc(100% - 80px);
+  
+  /* Smaller desktop: Slightly reduce min-width */
+  @media (max-width: 1500px), (max-height: 880px) {
+    min-width: 280px;
+  }
+  
+  /* Mobile: Full width and auto height */
+  @media (max-width: 768px) {
+    flex: none;
+    width: 100%;
+    min-width: unset;
+    height: auto;
+    min-height: 400px;
+  }
 `;
 
 const SearchHeader = styled.div`
@@ -84,6 +124,24 @@ const SearchHeader = styled.div`
 
   h1 {
     font-size: 24px;
+  }
+  
+  /* Smaller desktop: Slightly reduce height, padding and font size */
+  @media (max-width: 1500px), (max-height: 880px) {
+    h1 {
+       font-size: 22px;
+    }
+  }
+  
+  /* Mobile: Reduce height and padding */
+  @media (max-width: 768px) {
+    height: 70px;
+    padding: 15px;
+    
+    h1 {
+      font-size: 20px;
+      margin: 0;
+    }
   }
 `;
 
@@ -160,6 +218,14 @@ const ResultSection = styled.div`
   height: 100%;
   flex: 1;
   min-width: 0;
+  
+  /* Mobile: Full width and auto height */
+  @media (max-width: 768px) {
+    flex: none;
+    width: 100%;
+    height: auto;
+    min-height: 300px;
+  }
 `;
 
 // Startup Splash Components

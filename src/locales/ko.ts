@@ -60,9 +60,8 @@ export const ko = {
   
   // Search Notes
   searchNote: "참고:",
-  searchNoteDesc: "선택한",
-  searchNoteDesc2: "의 모든 플레이어를 가져오려면 승률에 0을 입력하세요. 해당 퍼센트 이상의 승률을 가진 플레이어를 필터링하려면 숫자(예: 60)를 입력하세요.",
-  pages: "페이지",
+  searchNoteDesc: "검색은 지정된",
+  searchNoteDesc2: "높은 승률일수록 충분한 결과를 찾기 위해 더 많은 페이지를 검색해야 할 수 있습니다.",
   rankRange: "순위 범위",
   
   // Regions
@@ -101,10 +100,15 @@ export const ko = {
   searchCancelled: "검색이 취소되었습니다",
   unknownError: "알 수 없는 오류가 발생했습니다",
   
+  // Progress Status
+  crawling: "(크롤링 중)",
+  completed: "(완료)",
+  
   // Units
   seconds: "초",
-  playersPerMinute: "명/분",
-  records: "개 기록",
+  pages: "페이지",
+  records: "개",
+  playersPerMinute: "플레이어/분",
   
   // Language
   language: "언어:",

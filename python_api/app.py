@@ -36,16 +36,21 @@ class ProgressTracker:
         self.is_running = False
         self.error_count = 0
         self.current_page_data = []  # Store current page data for transmission
+        self.start_page = 1  # Track the starting page number
+        self.batch_processing = False  # Track if we're in batch processing mode
     
-    def start(self, total_pages):
+    def start(self, total_pages, start_page=1, batch_processing=False):
         self.reset()
         self.start_time = datetime.now()
         self.total_pages = total_pages
+        self.start_page = start_page
+        self.batch_processing = batch_processing
         self.is_running = True
+        # Initialize current_page to the starting page
+        self.current_page = start_page
     
     def update_page(self, page_num, page_data=None, error=None):
         """Update progress for a specific page"""
-        # Don't update current_page here - it's set before crawling starts
         self.current_page_data = page_data if page_data else []
         
         if error:
@@ -63,12 +68,27 @@ class ProgressTracker:
             if self.start_time:
                 elapsed = (datetime.now() - self.start_time).total_seconds()
                 self.page_times.append(elapsed)
+        
+        # Update current_page logic based on processing mode
+        if self.batch_processing:
+            # In batch mode, current_page represents the highest completed page + 1
+            if not error:
+                next_page = page_num + 1
+                if next_page <= self.start_page + self.total_pages - 1:
+                    self.current_page = next_page
+        # For sequential processing, current_page is set before crawling starts
+        # and doesn't need to be updated here
+    
+    def set_current_page(self, page_num):
+        """Manually set the current page being processed"""
+        self.current_page = page_num
     
     def finish(self):
         self.is_running = False
         self.current_page_data = []
         # When finished, current_page should reflect that we've completed all pages
-        self.current_page = self.total_pages if self.completed_pages == self.total_pages else self.current_page
+        if self.completed_pages == self.total_pages:
+            self.current_page = self.start_page + self.total_pages - 1
 
 # Global progress tracker
 progress_tracker = ProgressTracker()
@@ -420,14 +440,14 @@ class FowCrawler:
     def crawl_multiple_pages_with_progress(self, region='kr', start_page=1, end_page=5):
         """Crawl multiple pages with real-time progress tracking"""
         total_pages = end_page - start_page + 1
-        progress_tracker.start(total_pages)
+        progress_tracker.start(total_pages, start_page, True)
         
         def crawl_worker():
             try:
                 for page in range(start_page, end_page + 1):
                     try:
                         # Update current page BEFORE starting to crawl
-                        progress_tracker.current_page = page
+                        progress_tracker.set_current_page(page)
                         
                         logger.info(f"Starting crawl for page {page}")
                         
@@ -609,6 +629,10 @@ def search_by_winrate():
         except ValueError:
             return jsonify({'error': 'Invalid winning percentage format'}), 400
         
+        # Initialize progress tracking for search
+        total_pages = end_page - start_page + 1
+        progress_tracker.start(total_pages, start_page, True)
+        
         crawler = FowCrawler()
         matching_players = []
         
@@ -618,6 +642,9 @@ def search_by_winrate():
         # Search through specified page range
         for page in range(start_page, end_page + 1):
             try:
+                # Update current page BEFORE starting to crawl
+                progress_tracker.set_current_page(page)
+                
                 print(f"Searching page {page} for region {region}...")
                 result = crawler.crawl_ranking_data(region=region, page=page)
                 
@@ -628,28 +655,35 @@ def search_by_winrate():
                 
                 if not result:
                     print(f"No result returned for page {page}")
+                    # Update progress even on failure
+                    progress_tracker.update_page(page, error="No result returned")
                     break
                     
                 if not result.get('success'):
-                    print(f"Page {page} failed: {result.get('error', 'Unknown error')}")
+                    error_msg = result.get('error', 'Unknown error')
+                    print(f"Page {page} failed: {error_msg}")
+                    # Update progress with error
+                    progress_tracker.update_page(page, error=error_msg)
                     continue
                     
                 data = result.get('data', [])
                 if not data:
                     print(f"No data found on page {page}")
+                    # Update progress even when no data found
+                    progress_tracker.update_page(page, [])
                     break
                 
                 print(f"Page {page}: Found {len(data)} players")
                 
                 # Add all players or filter by winrate
-                page_matches = 0
+                page_matches = []
                 for player in data:
                     player['페이지'] = page  # Add page info
                     
                     if not filter_by_winrate:
                         # Return all players when target_winrate is 0
                         matching_players.append(player)
-                        page_matches += 1
+                        page_matches.append(player)
                     else:
                         # Filter by winrate when target_winrate > 0
                         winrate_raw = player.get('승률', '')
@@ -674,16 +708,19 @@ def search_by_winrate():
                             # Match players with target winrate or higher
                             if player_winrate >= target_winrate_float:
                                 matching_players.append(player)
-                                page_matches += 1
+                                page_matches.append(player)
                                 
                         except (ValueError, TypeError, AttributeError):
                             # Skip players with unparseable winrate data when filtering
                             continue
                 
+                # Update progress tracker with the page data
+                progress_tracker.update_page(page, page_matches)
+                
                 if filter_by_winrate:
-                    print(f"Page {page}: Found {page_matches} matches with winrate >= {target_winrate_float}%")
+                    print(f"Page {page}: Found {len(page_matches)} matches with winrate >= {target_winrate_float}%")
                 else:
-                    print(f"Page {page}: Added all {page_matches} players")
+                    print(f"Page {page}: Added all {len(page_matches)} players")
                 
                 # Add a longer delay between pages to avoid rate limiting
                 if page < end_page:
@@ -692,7 +729,12 @@ def search_by_winrate():
                         
             except Exception as e:
                 print(f"Error searching page {page}: {e}")
+                # Update progress with error
+                progress_tracker.update_page(page, error=str(e))
                 continue
+        
+        # Finish progress tracking
+        progress_tracker.finish()
         
         search_type = "all players" if not filter_by_winrate else f"players with winrate >= {target_winrate}%"
         total_pages = end_page - start_page + 1
@@ -710,6 +752,8 @@ def search_by_winrate():
         })
         
     except Exception as e:
+        # Make sure to finish progress tracking even on error
+        progress_tracker.finish()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
