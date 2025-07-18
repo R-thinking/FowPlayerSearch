@@ -116,3 +116,7 @@ coverage.xml
 .mypy_cache
 .pytest_cache
 .hypothesis
+
+# Documentation files
+reference.en.md
+reference.kr.md

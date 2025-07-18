@@ -11,6 +11,10 @@ A desktop application for crawling and analyzing League of Legends ranking data 
 - 💾 **Export to CSV**: Export search results for further analysis
 - 🌍 **Multiple Regions**: Support for different League of Legends regions
 
+## 📸 Usage Screenshot
+
+![User Management System Dashboard](./frontend-dist/assets/Usage.png)
+
 ## Development
 
 ### Prerequisites
